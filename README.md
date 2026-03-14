@@ -76,3 +76,20 @@ Dashboard shows `Storage: Shared Sync` when both windows are using the same sync
 npm run build
 npm run test:run
 ```
+
+## Deploy on Render
+
+This project is configured to run as a Render Web Service using the included `render.yaml`.
+
+### Create the service
+
+1. Push this repository to GitHub.
+2. In Render, create a new service from the repo.
+3. Choose **Blueprint** (or Web Service) and use the values from `render.yaml`:
+  - Build command: `npm install && npm run build`
+  - Start command: `node server/index.js`
+
+### Data persistence
+
+The API currently stores data in `server/data/projects.json`.
+Use a persistent disk in Render and mount it so this file survives restarts and redeployments.

@@ -306,37 +306,37 @@ export default function DashboardPage() {
         ) : (
           filtered.map((project, index) => (
             <Card key={project.id} className="border-0" >
-              <div className="rounded-md p-4" style={{ backgroundColor: project.colorCode }}>
-                <div className="mb-2 flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-xs text-slate-700">#{index + 1}</p>
-                    <h2 className="text-lg font-semibold text-slate-900">{project.name}</h2>
-                    <p className="text-sm text-slate-700">Initiated: {project.initiationDate.toLocaleDateString()}</p>
+              <div className="flex h-28 flex-col justify-between rounded-md p-1.5" style={{ backgroundColor: project.colorCode }}>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <h2 className="truncate text-base font-semibold text-slate-900" title={project.name}>{project.name}</h2>
+                    <p className="text-xs text-slate-700">#{index + 1} • Initiated: {project.initiationDate.toLocaleDateString()}</p>
                   </div>
-                  <div className="flex gap-2">
-                    <Button variant="secondary" onClick={() => startEdit(project.id)}>Edit</Button>
-                    <Button variant="danger" onClick={() => setDeleteId(project.id)}>Delete</Button>
+                  <div className="flex shrink-0 gap-1">
+                    <Button className="px-2 py-1 text-xs" variant="secondary" onClick={() => startEdit(project.id)}>Edit</Button>
+                    <Button className="px-2 py-1 text-xs" variant="danger" onClick={() => setDeleteId(project.id)}>Delete</Button>
                   </div>
                 </div>
-                <p className="mb-3 text-sm text-slate-800">{project.purpose}</p>
-                {project.tags.length > 0 ? (
-                  <div className="mb-3 flex flex-wrap gap-2">
-                    {project.tags.map((tag) => (
+                <p className="mt-1 truncate text-xs text-slate-800" title={project.purpose}>{project.purpose}</p>
+                <div className="mt-1 flex items-center justify-between gap-2">
+                  <div className="flex min-w-0 flex-wrap gap-1">
+                    {project.tags.slice(0, 3).map((tag) => (
                       <button
                         key={tag}
                         type="button"
                         onClick={() => setSearchTerm(tag)}
-                        className="rounded-full bg-slate-900/10 px-2 py-1 text-xs text-slate-900 transition hover:bg-slate-900/20"
+                        className="rounded-full bg-slate-900/10 px-1.5 py-0.5 text-[11px] text-slate-900 transition hover:bg-slate-900/20"
                         title={`Filter by tag: ${tag}`}
                       >
                         #{tag}
                       </button>
                     ))}
+                    {project.tags.length > 3 ? <span className="text-[11px] text-slate-700">+{project.tags.length - 3}</span> : null}
                   </div>
-                ) : null}
-                <Link className="text-sm font-medium text-slate-900 underline" to={`/project/${project.id}`}>
-                  View Details
-                </Link>
+                  <Link className="shrink-0 text-xs font-medium text-slate-900 underline" to={`/project/${project.id}`}>
+                    Details
+                  </Link>
+                </div>
               </div>
             </Card>
           ))

@@ -1,4 +1,48 @@
 {
-  "updatedAt": 1772818706472,
-  "projects": []
+  "updatedAt": 1773530444706,
+  "projects": [
+    {
+      "id": "aa70dbe4-fc46-426e-9897-6b17d4693fb8",
+      "name": "artminds-quiz",
+      "initiationDate": "2026-03-09T00:00:00.000Z",
+      "purpose": "A program that displays a work of art and invites the user to guess the artist and the time period in which it was created.",
+      "colorCode": "#FEF3C7",
+      "tags": [],
+      "actions": []
+    },
+    {
+      "id": "b47147eb-d778-4bd3-9170-001fbc9a0620",
+      "name": "pickitup-itsyours",
+      "initiationDate": "2026-03-07T00:00:00.000Z",
+      "purpose": "A program that allows users to photograph items as trash left on sidewalks by their owners and share the photos along with the location for $5.00.",
+      "colorCode": "#FCE7F3",
+      "tags": [],
+      "actions": []
+    },
+    {
+      "id": "bf3e7b34-aa5e-426d-b352-894b9e108c8d",
+      "name": "QuizBanner",
+      "initiationDate": "2025-07-06T00:00:00.000Z",
+      "purpose": "A project for learning with banner questions and answers",
+      "colorCode": "#DCFCE7",
+      "tags": [],
+      "actions": []
+    },
+    {
+      "id": "4a2b2e9e-2931-48b7-a8b1-4c207c30387f",
+      "name": "jtdevtracker",
+      "initiationDate": "2026-03-06T00:00:00.000Z",
+      "purpose": "To track all my project dev coding in one place",
+      "colorCode": "#E0F2FE",
+      "tags": [],
+      "actions": [
+        {
+          "id": "fce4f85c-3171-4c47-a4ce-a47131626fe1",
+          "date": "2026-03-09T17:28:26.898Z",
+          "todayAction": "Reduce dialog boxes height.",
+          "todayActionNotes": "AI reduced and rearrange text inside dialog boxes"
+        }
+      ]
+    }
+  ]
 }
