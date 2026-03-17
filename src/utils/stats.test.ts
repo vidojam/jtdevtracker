@@ -7,6 +7,8 @@ const makeProject = (name: string, actionDates: string[], initiationDate: string
   name,
   initiationDate: new Date(initiationDate),
   purpose: 'purpose',
+  programDeployed: false,
+  techStack: [],
   colorCode: '#ffffff',
   tags: [],
   actions: actionDates.map((value, index) => ({

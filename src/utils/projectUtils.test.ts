@@ -7,19 +7,30 @@ const createProject = (name: string, date: string, purpose: string, tags: string
   name,
   initiationDate: new Date(date),
   purpose,
+  programDeployed: false,
+  techStack: [],
   colorCode: '#fff',
   tags,
   actions: [],
 });
 
 describe('project utils', () => {
-  it('sorts by newest first', () => {
+  it('sorts by newest first (latest added first)', () => {
     const projects = [
       createProject('A', '2024-01-01', 'first'),
       createProject('B', '2025-01-01', 'second'),
     ];
     const sorted = sortProjects(projects, 'newest');
     expect(sorted[0].name).toBe('B');
+  });
+
+  it('sorts by oldest initiation date first', () => {
+    const projects = [
+      createProject('A', '2025-01-01', 'first'),
+      createProject('B', '2024-01-01', 'second'),
+    ];
+    const sorted = sortProjects(projects, 'oldest');
+    expect(sorted.map((project) => project.name)).toEqual(['B', 'A']);
   });
 
   it('filters by name or purpose', () => {

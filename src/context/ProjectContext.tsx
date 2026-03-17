@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import type { Project, ProjectAction } from '../types';
+import type { Project, ProjectAction, TechStackEntry } from '../types';
 import { generateId, getProjectColor } from '../utils/projectUtils';
 
 const STORAGE_KEY = 'jt-dev-tracker-projects';
@@ -9,6 +9,8 @@ interface ProjectInput {
   name: string;
   initiationDate: string;
   purpose: string;
+  programDeployed: boolean;
+  techStack: TechStackEntry[];
   tags: string[];
 }
 
@@ -25,6 +27,7 @@ interface ProjectContextValue {
   addProject: (payload: ProjectInput) => Promise<void>;
   updateProject: (projectId: string, payload: ProjectInput) => Promise<void>;
   deleteProject: (projectId: string) => Promise<void>;
+  toggleDeploy: (projectId: string) => Promise<void>;
   addAction: (projectId: string, payload: ActionInput) => Promise<void>;
   deleteAction: (projectId: string, actionId: string) => Promise<void>;
   importProjects: (payload: unknown) => Promise<void>;
@@ -41,6 +44,7 @@ const normalizeImportedProjects = (payload: unknown): Project[] => {
     const item = project as Partial<Project> & {
       initiationDate?: string | Date;
       actions?: Array<Partial<ProjectAction> & { date?: string | Date }>;
+      techStackLink?: string;
     };
 
     const actions = Array.isArray(item.actions)
@@ -59,6 +63,16 @@ const normalizeImportedProjects = (payload: unknown): Project[] => {
       name: typeof item.name === 'string' ? item.name : `Imported Project ${projectIndex + 1}`,
       initiationDate: new Date(item.initiationDate ?? new Date()),
       purpose: typeof item.purpose === 'string' ? item.purpose : '',
+      programDeployed: typeof item.programDeployed === 'boolean' ? item.programDeployed : false,
+      techStack: Array.isArray(item.techStack)
+        ? item.techStack.filter((e): e is TechStackEntry =>
+            typeof e === 'object' && e !== null &&
+            typeof (e as TechStackEntry).name === 'string' &&
+            typeof (e as TechStackEntry).url === 'string'
+          )
+        : (typeof item.techStackLink === 'string' && item.techStackLink
+            ? [{ name: 'Tech Stack', url: item.techStackLink }]
+            : []),
       colorCode: typeof item.colorCode === 'string' ? item.colorCode : getProjectColor(projectIndex),
       tags: Array.isArray(item.tags) ? item.tags.filter((tag): tag is string => typeof tag === 'string') : [],
       actions,
@@ -69,9 +83,25 @@ const normalizeImportedProjects = (payload: unknown): Project[] => {
 const parseProjects = (raw: string | null): Project[] => {
   if (!raw) return [];
   try {
-    const parsed = JSON.parse(raw) as Array<Omit<Project, 'initiationDate' | 'actions'> & { initiationDate: string; actions: Array<Omit<ProjectAction, 'date'> & { date: string }>; }>;
-    return parsed.map((project) => ({
+    type StoredProject = Omit<Project, 'initiationDate' | 'actions' | 'techStack'> & {
+      initiationDate: string;
+      actions: Array<Omit<ProjectAction, 'date'> & { date: string }>;
+      techStack?: unknown;
+      techStackLink?: string;
+    };
+    const parsed = JSON.parse(raw) as StoredProject[];
+    return parsed.map(({ techStackLink, techStack: rawTechStack, ...project }) => ({
       ...project,
+      programDeployed: typeof project.programDeployed === 'boolean' ? project.programDeployed : false,
+      techStack: Array.isArray(rawTechStack)
+        ? rawTechStack.filter((e): e is TechStackEntry =>
+            typeof e === 'object' && e !== null &&
+            typeof (e as TechStackEntry).name === 'string' &&
+            typeof (e as TechStackEntry).url === 'string'
+          )
+        : (typeof techStackLink === 'string' && techStackLink
+            ? [{ name: 'Tech Stack', url: techStackLink }]
+            : []),
       tags: Array.isArray(project.tags) ? project.tags : [],
       initiationDate: new Date(project.initiationDate),
       actions: project.actions.map((action) => ({ ...action, date: new Date(action.date) })),
@@ -87,6 +117,7 @@ const parseProjectsFromUnknown = (payload: unknown): Project[] => {
     const item = project as Partial<Project> & {
       initiationDate?: string | Date;
       actions?: Array<Partial<ProjectAction> & { date?: string | Date }>;
+      techStackLink?: string;
     };
 
     return {
@@ -94,6 +125,16 @@ const parseProjectsFromUnknown = (payload: unknown): Project[] => {
       name: typeof item.name === 'string' ? item.name : 'Untitled Project',
       initiationDate: new Date(item.initiationDate ?? new Date()),
       purpose: typeof item.purpose === 'string' ? item.purpose : '',
+      programDeployed: typeof item.programDeployed === 'boolean' ? item.programDeployed : false,
+      techStack: Array.isArray(item.techStack)
+        ? item.techStack.filter((e): e is TechStackEntry =>
+            typeof e === 'object' && e !== null &&
+            typeof (e as TechStackEntry).name === 'string' &&
+            typeof (e as TechStackEntry).url === 'string'
+          )
+        : (typeof item.techStackLink === 'string' && item.techStackLink
+            ? [{ name: 'Tech Stack', url: item.techStackLink }]
+            : []),
       colorCode: typeof item.colorCode === 'string' ? item.colorCode : '#E0F2FE',
       tags: Array.isArray(item.tags) ? item.tags.filter((tag): tag is string => typeof tag === 'string') : [],
       actions: Array.isArray(item.actions)
@@ -217,16 +258,18 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const addProject = async (payload: ProjectInput) => {
     await runAction(() => {
       setProjects((current) => [
+        ...current,
         {
           id: generateId(),
           name: payload.name.trim(),
           initiationDate: new Date(payload.initiationDate),
           purpose: payload.purpose.trim(),
+          programDeployed: payload.programDeployed,
+          techStack: payload.techStack,
           colorCode: getProjectColor(current.length),
           tags: payload.tags,
           actions: [],
         },
-        ...current,
       ]);
     });
   };
@@ -241,6 +284,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
                 name: payload.name.trim(),
                 initiationDate: new Date(payload.initiationDate),
                 purpose: payload.purpose.trim(),
+                programDeployed: payload.programDeployed,
+                techStack: payload.techStack,
                 tags: payload.tags,
               }
             : project,
@@ -290,6 +335,18 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
+  const toggleDeploy = async (projectId: string) => {
+    await runAction(() => {
+      setProjects((current) =>
+        current.map((project) =>
+          project.id === projectId
+            ? { ...project, programDeployed: !project.programDeployed }
+            : project,
+        ),
+      );
+    });
+  };
+
   const importProjects = async (payload: unknown) => {
     await runAction(() => {
       const normalized = normalizeImportedProjects(payload);
@@ -306,6 +363,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       addProject,
       updateProject,
       deleteProject,
+      toggleDeploy,
       addAction,
       deleteAction,
       importProjects,

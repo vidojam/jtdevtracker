@@ -53,6 +53,19 @@ export default function ProjectDetailsPage() {
           <Link to="/" className="text-sm underline">Back</Link>
         </div>
         <p className="text-sm text-slate-600 dark:text-slate-300">Purpose: {project.purpose}</p>
+        <p className="text-sm text-slate-600 dark:text-slate-300">Program Deploy: {project.programDeployed ? 'Yes' : 'No'}</p>
+        {project.techStack.length > 0 ? (
+          <div className="text-sm text-slate-600 dark:text-slate-300">
+            <span className="font-medium">Tech Stack:</span>
+            <span className="ml-1 inline-flex flex-wrap gap-x-3 gap-y-1">
+              {project.techStack.map((entry) => (
+                <a key={entry.name} href={entry.url} className="underline" target="_blank" rel="noreferrer">
+                  {entry.name}
+                </a>
+              ))}
+            </span>
+          </div>
+        ) : null}
         {project.tags.length > 0 ? (
           <p className="text-sm text-slate-600 dark:text-slate-300">Tags: {project.tags.join(', ')}</p>
         ) : null}

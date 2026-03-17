@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent 
 import { useProjects } from '../context/ProjectContext';
 import { filterProjects, sortProjects } from '../utils/projectUtils';
 import { calculateProjectStats, getStaleProjects } from '../utils/stats';
-import type { SortOrder } from '../types';
+import type { SortOrder, TechStackEntry } from '../types';
 import Card from '../components/ui/Card';
 import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
@@ -14,10 +14,23 @@ interface ProjectFormState {
   name: string;
   initiationDate: string;
   purpose: string;
+  programDeployed: boolean;
+  techStack: TechStackEntry[];
+  techStackNameInput: string;
+  techStackUrlInput: string;
   tagsInput: string;
 }
 
-const emptyForm: ProjectFormState = { name: '', initiationDate: '', purpose: '', tagsInput: '' };
+const emptyForm: ProjectFormState = {
+  name: '',
+  initiationDate: '',
+  purpose: '',
+  programDeployed: false,
+  techStack: [],
+  techStackNameInput: '',
+  techStackUrlInput: '',
+  tagsInput: '',
+};
 
 const parseTags = (raw: string): string[] => {
   return raw
@@ -28,8 +41,8 @@ const parseTags = (raw: string): string[] => {
 };
 
 export default function DashboardPage() {
-  const { projects, isLoading, actionLoading, storageMode, addProject, updateProject, deleteProject, importProjects } = useProjects();
-  const [sortOrder, setSortOrder] = useState<SortOrder>('newest');
+  const { projects, isLoading, actionLoading, storageMode, addProject, updateProject, deleteProject, toggleDeploy, importProjects } = useProjects();
+  const [sortOrder, setSortOrder] = useState<SortOrder>('oldest');
   const [searchTerm, setSearchTerm] = useState('');
   const [form, setForm] = useState<ProjectFormState>(emptyForm);
   const [errors, setErrors] = useState<Partial<ProjectFormState>>({});
@@ -37,6 +50,7 @@ export default function DashboardPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const formRef = useRef<HTMLDivElement | null>(null);
   const notificationSupported = typeof Notification !== 'undefined';
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission | 'unsupported'>(
     notificationSupported ? Notification.permission : 'unsupported',
@@ -88,6 +102,8 @@ export default function DashboardPage() {
       name: form.name,
       initiationDate: form.initiationDate,
       purpose: form.purpose,
+      programDeployed: form.programDeployed,
+      techStack: form.techStack,
       tags: parseTags(form.tagsInput),
     };
     if (editingId) {
@@ -106,6 +122,22 @@ export default function DashboardPage() {
       setForm((current) => ({ ...current, [key]: event.target.value }));
     };
 
+  const addTechEntry = () => {
+    const name = form.techStackNameInput.trim();
+    const url = form.techStackUrlInput.trim();
+    if (!name || !url) return;
+    setForm((current) => ({
+      ...current,
+      techStack: [...current.techStack, { name, url }],
+      techStackNameInput: '',
+      techStackUrlInput: '',
+    }));
+  };
+
+  const removeTechEntry = (index: number) => {
+    setForm((current) => ({ ...current, techStack: current.techStack.filter((_, i) => i !== index) }));
+  };
+
   const startEdit = (projectId: string) => {
     const project = projects.find((item) => item.id === projectId);
     if (!project) return;
@@ -114,8 +146,13 @@ export default function DashboardPage() {
       name: project.name,
       initiationDate: project.initiationDate.toISOString().slice(0, 10),
       purpose: project.purpose,
+      programDeployed: project.programDeployed,
+      techStack: project.techStack,
+      techStackNameInput: '',
+      techStackUrlInput: '',
       tagsInput: project.tags.join(', '),
     });
+    setTimeout(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0);
   };
 
   const doExport = () => {
@@ -159,6 +196,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <LoadingOverlay visible={actionLoading} />
+      <div ref={formRef}>
       <Card>
         <div className="mb-4 flex items-center justify-between gap-2">
           <h1 className="text-2xl font-semibold">Project Dashboard</h1>
@@ -188,6 +226,48 @@ export default function DashboardPage() {
             onChange={onInputChange('purpose')}
             error={errors.purpose}
           />
+          <div className="md:col-span-2">
+            <p className="mb-1 text-sm font-medium text-slate-700 dark:text-slate-200">Tech Stack</p>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="Name (e.g. React)"
+                value={form.techStackNameInput}
+                onChange={(e) => setForm((c) => ({ ...c, techStackNameInput: e.target.value }))}
+                className="flex-1 rounded-md border border-slate-400 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+              />
+              <input
+                type="url"
+                placeholder="URL (https://...)"
+                value={form.techStackUrlInput}
+                onChange={(e) => setForm((c) => ({ ...c, techStackUrlInput: e.target.value }))}
+                className="flex-1 rounded-md border border-slate-400 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+              />
+              <Button type="button" variant="secondary" onClick={addTechEntry}>Add</Button>
+            </div>
+            {form.techStack.length > 0 ? (
+              <ul className="mt-2 space-y-1">
+                {form.techStack.map((entry, index) => (
+                  <li key={index} className="flex items-center gap-2 text-sm">
+                    <a href={entry.url} target="_blank" rel="noreferrer" className="min-w-0 flex-1 truncate text-slate-700 underline dark:text-slate-300">
+                      {entry.name}
+                    </a>
+                    <span className="max-w-[200px] truncate text-xs text-slate-500">{entry.url}</span>
+                    <Button type="button" variant="danger" className="shrink-0 px-2 py-0.5 text-xs" onClick={() => removeTechEntry(index)}>×</Button>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
+          <label className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+            <input
+              type="checkbox"
+              checked={form.programDeployed}
+              onChange={(event) => setForm((current) => ({ ...current, programDeployed: event.target.checked }))}
+              className="h-4 w-4 rounded border-slate-400 text-slate-800 focus:ring-slate-500 dark:border-slate-700"
+            />
+            Program Deploy: Yes/No
+          </label>
           <Input
             label="Tags (comma-separated)"
             className="md:col-span-2"
@@ -213,6 +293,7 @@ export default function DashboardPage() {
           </div>
         </form>
       </Card>
+      </div>
 
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <Input
@@ -306,7 +387,7 @@ export default function DashboardPage() {
         ) : (
           filtered.map((project, index) => (
             <Card key={project.id} className="border-0" >
-              <div className="flex h-28 flex-col justify-between rounded-md p-1.5" style={{ backgroundColor: project.colorCode }}>
+              <div className="flex flex-col gap-1.5 rounded-md p-1.5" style={{ backgroundColor: project.colorCode }}>
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <h2 className="truncate text-base font-semibold text-slate-900" title={project.name}>{project.name}</h2>
@@ -318,6 +399,18 @@ export default function DashboardPage() {
                   </div>
                 </div>
                 <p className="mt-1 truncate text-xs text-slate-800" title={project.purpose}>{project.purpose}</p>
+                <button
+                  type="button"
+                  onClick={() => void toggleDeploy(project.id)}
+                  className={`mt-0.5 self-start rounded px-1.5 py-0.5 text-[11px] font-medium transition ${
+                    project.programDeployed
+                      ? 'bg-green-600/20 text-green-900 hover:bg-green-600/30'
+                      : 'bg-slate-900/10 text-slate-800 hover:bg-slate-900/20'
+                  }`}
+                  title="Click to toggle deploy status"
+                >
+                  Deploy: {project.programDeployed ? 'Yes ✓' : 'No'}
+                </button>
                 <div className="mt-1 flex items-center justify-between gap-2">
                   <div className="flex min-w-0 flex-wrap gap-1">
                     {project.tags.slice(0, 3).map((tag) => (
@@ -333,9 +426,27 @@ export default function DashboardPage() {
                     ))}
                     {project.tags.length > 3 ? <span className="text-[11px] text-slate-700">+{project.tags.length - 3}</span> : null}
                   </div>
-                  <Link className="shrink-0 text-xs font-medium text-slate-900 underline" to={`/project/${project.id}`}>
-                    Details
-                  </Link>
+                  <div className="flex shrink-0 gap-2">
+                    {project.techStack.slice(0, 2).map((entry) => (
+                      <a
+                        key={entry.name}
+                        className="text-xs font-medium text-slate-900 underline"
+                        href={entry.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        title={entry.url}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {entry.name}
+                      </a>
+                    ))}
+                    {project.techStack.length > 2 ? (
+                      <span className="text-[11px] text-slate-700">+{project.techStack.length - 2} tech</span>
+                    ) : null}
+                    <Link className="text-xs font-medium text-slate-900 underline" to={`/project/${project.id}`}>
+                      Details
+                    </Link>
+                  </div>
                 </div>
               </div>
             </Card>

@@ -1,11 +1,13 @@
 {
-  "updatedAt": 1773530444706,
+  "updatedAt": 1773760734803,
   "projects": [
     {
       "id": "aa70dbe4-fc46-426e-9897-6b17d4693fb8",
       "name": "artminds-quiz",
       "initiationDate": "2026-03-09T00:00:00.000Z",
       "purpose": "A program that displays a work of art and invites the user to guess the artist and the time period in which it was created.",
+      "programDeployed": false,
+      "techStack": [],
       "colorCode": "#FEF3C7",
       "tags": [],
       "actions": []
@@ -15,6 +17,8 @@
       "name": "pickitup-itsyours",
       "initiationDate": "2026-03-07T00:00:00.000Z",
       "purpose": "A program that allows users to photograph items as trash left on sidewalks by their owners and share the photos along with the location for $5.00.",
+      "programDeployed": false,
+      "techStack": [],
       "colorCode": "#FCE7F3",
       "tags": [],
       "actions": []
@@ -24,6 +28,8 @@
       "name": "QuizBanner",
       "initiationDate": "2025-07-06T00:00:00.000Z",
       "purpose": "A project for learning with banner questions and answers",
+      "programDeployed": true,
+      "techStack": [],
       "colorCode": "#DCFCE7",
       "tags": [],
       "actions": []
@@ -33,6 +39,8 @@
       "name": "jtdevtracker",
       "initiationDate": "2026-03-06T00:00:00.000Z",
       "purpose": "To track all my project dev coding in one place",
+      "programDeployed": true,
+      "techStack": [],
       "colorCode": "#E0F2FE",
       "tags": [],
       "actions": [
