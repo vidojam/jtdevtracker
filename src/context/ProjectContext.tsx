@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import type { Project, ProjectAction, TechStackEntry } from '../types';
+import type { DeploymentInfo, Project, ProjectAction, ProjectSnapshot, ProjectSnapshotScreen, TechStackEntry } from '../types';
 import { generateId, getProjectColor } from '../utils/projectUtils';
 
 const STORAGE_KEY = 'jt-dev-tracker-projects';
@@ -19,6 +19,14 @@ interface ActionInput {
   todayActionNotes: string;
 }
 
+interface DeploymentInfoInput {
+  deployedOn: string;
+  date: string;
+  cost: string;
+  term: string;
+  benefits: string;
+}
+
 interface ProjectContextValue {
   projects: Project[];
   isLoading: boolean;
@@ -30,10 +38,75 @@ interface ProjectContextValue {
   toggleDeploy: (projectId: string) => Promise<void>;
   addAction: (projectId: string, payload: ActionInput) => Promise<void>;
   deleteAction: (projectId: string, actionId: string) => Promise<void>;
+  updateDeploymentInfo: (projectId: string, payload: DeploymentInfoInput) => Promise<void>;
   importProjects: (payload: unknown) => Promise<void>;
 }
 
 const ProjectContext = createContext<ProjectContextValue | undefined>(undefined);
+
+const normalizeDeploymentInfo = (payload: unknown): DeploymentInfo | undefined => {
+  if (!payload || typeof payload !== 'object') return undefined;
+  const item = payload as Partial<DeploymentInfo>;
+  return {
+    deployedOn: typeof item.deployedOn === 'string' ? item.deployedOn : '',
+    date: typeof item.date === 'string' ? item.date : '',
+    cost: typeof item.cost === 'string' ? item.cost : '',
+    term: typeof item.term === 'string' ? item.term : '',
+    benefits: typeof item.benefits === 'string' ? item.benefits : '',
+  };
+};
+
+const buildSnapshotScreen = (project: Pick<Project, 'purpose' | 'programDeployed' | 'techStack' | 'tags' | 'actions'>): ProjectSnapshotScreen => {
+  const lastAction = project.actions.at(-1);
+  return {
+    purpose: project.purpose,
+    programDeployed: project.programDeployed,
+    techStack: project.techStack.map((entry) => entry.name),
+    tags: [...project.tags],
+    totalActions: project.actions.length,
+    lastAction: lastAction?.todayAction,
+    lastActionNotes: lastAction?.todayActionNotes,
+  };
+};
+
+const normalizeSnapshotScreen = (
+  screen: unknown,
+  fallbackProject: Pick<Project, 'purpose' | 'programDeployed' | 'techStack' | 'tags' | 'actions'>,
+): ProjectSnapshotScreen => {
+  const fallback = buildSnapshotScreen(fallbackProject);
+  if (!screen || typeof screen !== 'object') return fallback;
+
+  const item = screen as Partial<ProjectSnapshotScreen>;
+  return {
+    purpose: typeof item.purpose === 'string' ? item.purpose : fallback.purpose,
+    programDeployed: typeof item.programDeployed === 'boolean' ? item.programDeployed : fallback.programDeployed,
+    techStack: Array.isArray(item.techStack)
+      ? item.techStack.filter((tech): tech is string => typeof tech === 'string')
+      : fallback.techStack,
+    tags: Array.isArray(item.tags)
+      ? item.tags.filter((tag): tag is string => typeof tag === 'string')
+      : fallback.tags,
+    totalActions: typeof item.totalActions === 'number' ? item.totalActions : fallback.totalActions,
+    lastAction: typeof item.lastAction === 'string' ? item.lastAction : fallback.lastAction,
+    lastActionNotes: typeof item.lastActionNotes === 'string' ? item.lastActionNotes : fallback.lastActionNotes,
+  };
+};
+
+const createSnapshot = (project: Project, trigger: ProjectSnapshot['trigger']): ProjectSnapshot => {
+  return {
+    id: generateId(),
+    date: new Date(),
+    trigger,
+    screen: buildSnapshotScreen(project),
+  };
+};
+
+const appendSnapshot = (project: Project, trigger: ProjectSnapshot['trigger']): Project => {
+  return {
+    ...project,
+    snapshots: [...(project.snapshots ?? []), createSnapshot(project, trigger)],
+  };
+};
 
 const normalizeImportedProjects = (payload: unknown): Project[] => {
   if (!Array.isArray(payload)) {
@@ -58,24 +131,54 @@ const normalizeImportedProjects = (payload: unknown): Project[] => {
         }))
       : [];
 
+    const techStack = Array.isArray(item.techStack)
+      ? item.techStack.filter((e): e is TechStackEntry =>
+          typeof e === 'object' && e !== null &&
+          typeof (e as TechStackEntry).name === 'string' &&
+          typeof (e as TechStackEntry).url === 'string'
+        )
+      : (typeof item.techStackLink === 'string' && item.techStackLink
+          ? [{ name: 'Tech Stack', url: item.techStackLink }]
+          : []);
+
+    const tags = Array.isArray(item.tags) ? item.tags.filter((tag): tag is string => typeof tag === 'string') : [];
+
+    const snapshotFallbackProject: Pick<Project, 'purpose' | 'programDeployed' | 'techStack' | 'tags' | 'actions'> = {
+      purpose: typeof item.purpose === 'string' ? item.purpose : '',
+      programDeployed: typeof item.programDeployed === 'boolean' ? item.programDeployed : false,
+      techStack,
+      tags,
+      actions,
+    };
+
+    const snapshots = Array.isArray(item.snapshots)
+      ? item.snapshots.map((snapshot) => ({
+          id: typeof snapshot.id === 'string' ? snapshot.id : generateId(),
+          date: new Date(snapshot.date ?? new Date()),
+          trigger:
+            snapshot.trigger === 'project-created' ||
+            snapshot.trigger === 'project-updated' ||
+            snapshot.trigger === 'action-added' ||
+            snapshot.trigger === 'action-deleted' ||
+            snapshot.trigger === 'deploy-toggled'
+              ? snapshot.trigger
+              : 'project-updated',
+          screen: normalizeSnapshotScreen(snapshot.screen, snapshotFallbackProject),
+        }))
+      : [];
+
     return {
       id: typeof item.id === 'string' ? item.id : generateId(),
       name: typeof item.name === 'string' ? item.name : `Imported Project ${projectIndex + 1}`,
       initiationDate: new Date(item.initiationDate ?? new Date()),
       purpose: typeof item.purpose === 'string' ? item.purpose : '',
       programDeployed: typeof item.programDeployed === 'boolean' ? item.programDeployed : false,
-      techStack: Array.isArray(item.techStack)
-        ? item.techStack.filter((e): e is TechStackEntry =>
-            typeof e === 'object' && e !== null &&
-            typeof (e as TechStackEntry).name === 'string' &&
-            typeof (e as TechStackEntry).url === 'string'
-          )
-        : (typeof item.techStackLink === 'string' && item.techStackLink
-            ? [{ name: 'Tech Stack', url: item.techStackLink }]
-            : []),
+      deploymentInfo: normalizeDeploymentInfo(item.deploymentInfo),
+      techStack,
       colorCode: typeof item.colorCode === 'string' ? item.colorCode : getProjectColor(projectIndex),
-      tags: Array.isArray(item.tags) ? item.tags.filter((tag): tag is string => typeof tag === 'string') : [],
+      tags,
       actions,
+      snapshots,
     };
   });
 };
@@ -83,17 +186,17 @@ const normalizeImportedProjects = (payload: unknown): Project[] => {
 const parseProjects = (raw: string | null): Project[] => {
   if (!raw) return [];
   try {
-    type StoredProject = Omit<Project, 'initiationDate' | 'actions' | 'techStack'> & {
+    type StoredProject = Omit<Project, 'initiationDate' | 'actions' | 'techStack' | 'snapshots'> & {
       initiationDate: string;
       actions: Array<Omit<ProjectAction, 'date'> & { date: string }>;
+      snapshots?: Array<Omit<ProjectSnapshot, 'date'> & { date: string }>;
       techStack?: unknown;
       techStackLink?: string;
     };
     const parsed = JSON.parse(raw) as StoredProject[];
-    return parsed.map(({ techStackLink, techStack: rawTechStack, ...project }) => ({
-      ...project,
-      programDeployed: typeof project.programDeployed === 'boolean' ? project.programDeployed : false,
-      techStack: Array.isArray(rawTechStack)
+    return parsed.map(({ techStackLink, techStack: rawTechStack, ...project }) => {
+      const actions = project.actions.map((action) => ({ ...action, date: new Date(action.date) }));
+      const techStack = Array.isArray(rawTechStack)
         ? rawTechStack.filter((e): e is TechStackEntry =>
             typeof e === 'object' && e !== null &&
             typeof (e as TechStackEntry).name === 'string' &&
@@ -101,11 +204,33 @@ const parseProjects = (raw: string | null): Project[] => {
           )
         : (typeof techStackLink === 'string' && techStackLink
             ? [{ name: 'Tech Stack', url: techStackLink }]
-            : []),
-      tags: Array.isArray(project.tags) ? project.tags : [],
-      initiationDate: new Date(project.initiationDate),
-      actions: project.actions.map((action) => ({ ...action, date: new Date(action.date) })),
-    }));
+            : []);
+      const tags = Array.isArray(project.tags) ? project.tags : [];
+      const snapshotFallbackProject: Pick<Project, 'purpose' | 'programDeployed' | 'techStack' | 'tags' | 'actions'> = {
+        purpose: typeof project.purpose === 'string' ? project.purpose : '',
+        programDeployed: typeof project.programDeployed === 'boolean' ? project.programDeployed : false,
+        techStack,
+        tags,
+        actions,
+      };
+
+      return {
+        ...project,
+        programDeployed: typeof project.programDeployed === 'boolean' ? project.programDeployed : false,
+        deploymentInfo: normalizeDeploymentInfo(project.deploymentInfo),
+        techStack,
+        tags,
+        initiationDate: new Date(project.initiationDate),
+        actions,
+        snapshots: Array.isArray(project.snapshots)
+          ? project.snapshots.map((snapshot) => ({
+              ...snapshot,
+              date: new Date(snapshot.date),
+              screen: normalizeSnapshotScreen(snapshot.screen, snapshotFallbackProject),
+            }))
+          : [],
+      };
+    });
   } catch {
     return [];
   }
@@ -117,7 +242,37 @@ const parseProjectsFromUnknown = (payload: unknown): Project[] => {
     const item = project as Partial<Project> & {
       initiationDate?: string | Date;
       actions?: Array<Partial<ProjectAction> & { date?: string | Date }>;
+      snapshots?: Array<Partial<ProjectSnapshot> & { date?: string | Date }>;
       techStackLink?: string;
+    };
+
+    const techStack = Array.isArray(item.techStack)
+      ? item.techStack.filter((e): e is TechStackEntry =>
+          typeof e === 'object' && e !== null &&
+          typeof (e as TechStackEntry).name === 'string' &&
+          typeof (e as TechStackEntry).url === 'string'
+        )
+      : (typeof item.techStackLink === 'string' && item.techStackLink
+          ? [{ name: 'Tech Stack', url: item.techStackLink }]
+          : []);
+
+    const tags = Array.isArray(item.tags) ? item.tags.filter((tag): tag is string => typeof tag === 'string') : [];
+    const actions = Array.isArray(item.actions)
+      ? item.actions.map((action) => ({
+          id: typeof action.id === 'string' ? action.id : generateId(),
+          date: new Date(action.date ?? new Date()),
+          lastAction: typeof action.lastAction === 'string' ? action.lastAction : undefined,
+          lastActionNotes: typeof action.lastActionNotes === 'string' ? action.lastActionNotes : undefined,
+          todayAction: typeof action.todayAction === 'string' ? action.todayAction : '',
+          todayActionNotes: typeof action.todayActionNotes === 'string' ? action.todayActionNotes : '',
+        }))
+      : [];
+    const snapshotFallbackProject: Pick<Project, 'purpose' | 'programDeployed' | 'techStack' | 'tags' | 'actions'> = {
+      purpose: typeof item.purpose === 'string' ? item.purpose : '',
+      programDeployed: typeof item.programDeployed === 'boolean' ? item.programDeployed : false,
+      techStack,
+      tags,
+      actions,
     };
 
     return {
@@ -126,25 +281,24 @@ const parseProjectsFromUnknown = (payload: unknown): Project[] => {
       initiationDate: new Date(item.initiationDate ?? new Date()),
       purpose: typeof item.purpose === 'string' ? item.purpose : '',
       programDeployed: typeof item.programDeployed === 'boolean' ? item.programDeployed : false,
-      techStack: Array.isArray(item.techStack)
-        ? item.techStack.filter((e): e is TechStackEntry =>
-            typeof e === 'object' && e !== null &&
-            typeof (e as TechStackEntry).name === 'string' &&
-            typeof (e as TechStackEntry).url === 'string'
-          )
-        : (typeof item.techStackLink === 'string' && item.techStackLink
-            ? [{ name: 'Tech Stack', url: item.techStackLink }]
-            : []),
+      deploymentInfo: normalizeDeploymentInfo(item.deploymentInfo),
+      techStack,
       colorCode: typeof item.colorCode === 'string' ? item.colorCode : '#E0F2FE',
-      tags: Array.isArray(item.tags) ? item.tags.filter((tag): tag is string => typeof tag === 'string') : [],
-      actions: Array.isArray(item.actions)
-        ? item.actions.map((action) => ({
-            id: typeof action.id === 'string' ? action.id : generateId(),
-            date: new Date(action.date ?? new Date()),
-            lastAction: typeof action.lastAction === 'string' ? action.lastAction : undefined,
-            lastActionNotes: typeof action.lastActionNotes === 'string' ? action.lastActionNotes : undefined,
-            todayAction: typeof action.todayAction === 'string' ? action.todayAction : '',
-            todayActionNotes: typeof action.todayActionNotes === 'string' ? action.todayActionNotes : '',
+      tags,
+      actions,
+      snapshots: Array.isArray(item.snapshots)
+        ? item.snapshots.map((snapshot) => ({
+            id: typeof snapshot.id === 'string' ? snapshot.id : generateId(),
+            date: new Date(snapshot.date ?? new Date()),
+            trigger:
+              snapshot.trigger === 'project-created' ||
+              snapshot.trigger === 'project-updated' ||
+              snapshot.trigger === 'action-added' ||
+              snapshot.trigger === 'action-deleted' ||
+              snapshot.trigger === 'deploy-toggled'
+                ? snapshot.trigger
+                : 'project-updated',
+            screen: normalizeSnapshotScreen(snapshot.screen, snapshotFallbackProject),
           }))
         : [],
     };
@@ -259,17 +413,19 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     await runAction(() => {
       setProjects((current) => [
         ...current,
-        {
+        appendSnapshot({
           id: generateId(),
           name: payload.name.trim(),
           initiationDate: new Date(payload.initiationDate),
           purpose: payload.purpose.trim(),
           programDeployed: payload.programDeployed,
+          deploymentInfo: undefined,
           techStack: payload.techStack,
           colorCode: getProjectColor(current.length),
           tags: payload.tags,
           actions: [],
-        },
+          snapshots: [],
+        }, 'project-created'),
       ]);
     });
   };
@@ -279,7 +435,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       setProjects((current) =>
         current.map((project) =>
           project.id === projectId
-            ? {
+            ? appendSnapshot({
                 ...project,
                 name: payload.name.trim(),
                 initiationDate: new Date(payload.initiationDate),
@@ -287,7 +443,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
                 programDeployed: payload.programDeployed,
                 techStack: payload.techStack,
                 tags: payload.tags,
-              }
+              }, 'project-updated')
             : project,
         ),
       );
@@ -314,10 +470,10 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
             todayAction: payload.todayAction.trim(),
             todayActionNotes: payload.todayActionNotes.trim(),
           };
-          return {
+          return appendSnapshot({
             ...project,
             actions: [...project.actions, entry],
-          };
+          }, 'action-added');
         }),
       );
     });
@@ -328,7 +484,10 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       setProjects((current) =>
         current.map((project) =>
           project.id === projectId
-            ? { ...project, actions: project.actions.filter((action) => action.id !== actionId) }
+            ? appendSnapshot({
+                ...project,
+                actions: project.actions.filter((action) => action.id !== actionId),
+              }, 'action-deleted')
             : project,
         ),
       );
@@ -340,7 +499,10 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       setProjects((current) =>
         current.map((project) =>
           project.id === projectId
-            ? { ...project, programDeployed: !project.programDeployed }
+            ? appendSnapshot({
+                ...project,
+                programDeployed: !project.programDeployed,
+              }, 'deploy-toggled')
             : project,
         ),
       );
@@ -351,6 +513,27 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     await runAction(() => {
       const normalized = normalizeImportedProjects(payload);
       setProjects(normalized);
+    });
+  };
+
+  const updateDeploymentInfo = async (projectId: string, payload: DeploymentInfoInput) => {
+    await runAction(() => {
+      setProjects((current) =>
+        current.map((project) =>
+          project.id === projectId
+            ? appendSnapshot({
+                ...project,
+                deploymentInfo: {
+                  deployedOn: payload.deployedOn.trim(),
+                  date: payload.date,
+                  cost: payload.cost.trim(),
+                  term: payload.term.trim(),
+                  benefits: payload.benefits.trim(),
+                },
+              }, 'project-updated')
+            : project,
+        ),
+      );
     });
   };
 
@@ -366,6 +549,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       toggleDeploy,
       addAction,
       deleteAction,
+      updateDeploymentInfo,
       importProjects,
     };
   }, [projects, isLoading, actionLoading, storageMode]);

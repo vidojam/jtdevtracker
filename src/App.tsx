@@ -1,6 +1,9 @@
 import { Link, Navigate, Route, Routes } from 'react-router-dom';
 import DashboardPage from './pages/DashboardPage';
+import DeploymentInformationPage from './pages/DeploymentInformationPage.tsx';
 import ProjectDetailsPage from './pages/ProjectDetailsPage';
+import ProjectSnapshotsPage from './pages/ProjectSnapshotsPage';
+import TechStackPage from './pages/TechStackPage';
 import { useEffect, useState } from 'react';
 
 function App() {
@@ -31,6 +34,9 @@ function App() {
         <Routes>
           <Route path="/" element={<DashboardPage />} />
           <Route path="/project/:projectId" element={<ProjectDetailsPage />} />
+          <Route path="/project/:projectId/deployment-information" element={<DeploymentInformationPage />} />
+          <Route path="/project/:projectId/snapshots" element={<ProjectSnapshotsPage />} />
+          <Route path="/project/:projectId/tech-stack" element={<TechStackPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

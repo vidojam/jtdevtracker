@@ -16,8 +16,7 @@ interface ProjectFormState {
   purpose: string;
   programDeployed: boolean;
   techStack: TechStackEntry[];
-  techStackNameInput: string;
-  techStackUrlInput: string;
+  techStackInput: string;
   tagsInput: string;
 }
 
@@ -27,8 +26,7 @@ const emptyForm: ProjectFormState = {
   purpose: '',
   programDeployed: false,
   techStack: [],
-  techStackNameInput: '',
-  techStackUrlInput: '',
+  techStackInput: '',
   tagsInput: '',
 };
 
@@ -38,6 +36,29 @@ const parseTags = (raw: string): string[] => {
     .map((tag) => tag.trim())
     .filter(Boolean)
     .filter((tag, index, all) => all.findIndex((value) => value.toLowerCase() === tag.toLowerCase()) === index);
+};
+
+const buildTechEntryFromInputs = (rawText: string): TechStackEntry | null => {
+  const text = rawText.trim();
+  if (!text) return null;
+  return { name: text, url: '' };
+};
+
+const dedupeTechStack = (entries: TechStackEntry[]): TechStackEntry[] => {
+  const seen = new Set<string>();
+  const unique: TechStackEntry[] = [];
+
+  for (const entry of entries) {
+    const name = entry.name.trim();
+    if (!name) continue;
+
+    const key = name.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    unique.push({ name, url: '' });
+  }
+
+  return unique;
 };
 
 export default function DashboardPage() {
@@ -98,12 +119,16 @@ export default function DashboardPage() {
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     if (!validate()) return;
+    const pendingEntry = buildTechEntryFromInputs(form.techStackInput);
+    const nextTechStack = dedupeTechStack(
+      pendingEntry ? [...form.techStack, pendingEntry] : form.techStack,
+    );
     const payload = {
       name: form.name,
       initiationDate: form.initiationDate,
       purpose: form.purpose,
       programDeployed: form.programDeployed,
-      techStack: form.techStack,
+      techStack: nextTechStack,
       tags: parseTags(form.tagsInput),
     };
     if (editingId) {
@@ -123,14 +148,12 @@ export default function DashboardPage() {
     };
 
   const addTechEntry = () => {
-    const name = form.techStackNameInput.trim();
-    const url = form.techStackUrlInput.trim();
-    if (!name || !url) return;
+    const entry = buildTechEntryFromInputs(form.techStackInput);
+    if (!entry) return;
     setForm((current) => ({
       ...current,
-      techStack: [...current.techStack, { name, url }],
-      techStackNameInput: '',
-      techStackUrlInput: '',
+      techStack: dedupeTechStack([...current.techStack, entry]),
+      techStackInput: '',
     }));
   };
 
@@ -148,8 +171,7 @@ export default function DashboardPage() {
       purpose: project.purpose,
       programDeployed: project.programDeployed,
       techStack: project.techStack,
-      techStackNameInput: '',
-      techStackUrlInput: '',
+      techStackInput: '',
       tagsInput: project.tags.join(', '),
     });
     setTimeout(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0);
@@ -231,29 +253,23 @@ export default function DashboardPage() {
             <div className="flex gap-2">
               <input
                 type="text"
-                placeholder="Name (e.g. React)"
-                value={form.techStackNameInput}
-                onChange={(e) => setForm((c) => ({ ...c, techStackNameInput: e.target.value }))}
-                className="flex-1 rounded-md border border-slate-400 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-              />
-              <input
-                type="url"
-                placeholder="URL (https://...)"
-                value={form.techStackUrlInput}
-                onChange={(e) => setForm((c) => ({ ...c, techStackUrlInput: e.target.value }))}
+                placeholder="e.g. React, Node.js, PostgreSQL, etc."
+                value={form.techStackInput}
+                onChange={(e) => setForm((c) => ({ ...c, techStackInput: e.target.value }))}
                 className="flex-1 rounded-md border border-slate-400 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               />
               <Button type="button" variant="secondary" onClick={addTechEntry}>Add</Button>
             </div>
             {form.techStack.length > 0 ? (
-              <ul className="mt-2 space-y-1">
+              <ul className="mt-3 space-y-2">
                 {form.techStack.map((entry, index) => (
-                  <li key={index} className="flex items-center gap-2 text-sm">
-                    <a href={entry.url} target="_blank" rel="noreferrer" className="min-w-0 flex-1 truncate text-slate-700 underline dark:text-slate-300">
-                      {entry.name}
-                    </a>
-                    <span className="max-w-[200px] truncate text-xs text-slate-500">{entry.url}</span>
-                    <Button type="button" variant="danger" className="shrink-0 px-2 py-0.5 text-xs" onClick={() => removeTechEntry(index)}>×</Button>
+                  <li key={index} className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-800/40">
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="min-w-0 flex-1 break-words text-sm text-slate-700 dark:text-slate-300">
+                        {entry.name}
+                      </span>
+                      <Button type="button" variant="danger" className="mt-0.5 shrink-0 px-2 py-0.5 text-xs" onClick={() => removeTechEntry(index)}>×</Button>
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -411,7 +427,7 @@ export default function DashboardPage() {
                 >
                   Deploy: {project.programDeployed ? 'Yes ✓' : 'No'}
                 </button>
-                <div className="mt-1 flex items-center justify-between gap-2">
+                <div className="mt-1 flex items-start justify-between gap-2">
                   <div className="flex min-w-0 flex-wrap gap-1">
                     {project.tags.slice(0, 3).map((tag) => (
                       <button
@@ -426,23 +442,7 @@ export default function DashboardPage() {
                     ))}
                     {project.tags.length > 3 ? <span className="text-[11px] text-slate-700">+{project.tags.length - 3}</span> : null}
                   </div>
-                  <div className="flex shrink-0 gap-2">
-                    {project.techStack.slice(0, 2).map((entry) => (
-                      <a
-                        key={entry.name}
-                        className="text-xs font-medium text-slate-900 underline"
-                        href={entry.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        title={entry.url}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {entry.name}
-                      </a>
-                    ))}
-                    {project.techStack.length > 2 ? (
-                      <span className="text-[11px] text-slate-700">+{project.techStack.length - 2} tech</span>
-                    ) : null}
+                  <div className="min-w-0 flex flex-1 justify-end">
                     <Link className="text-xs font-medium text-slate-900 underline" to={`/project/${project.id}`}>
                       Details
                     </Link>

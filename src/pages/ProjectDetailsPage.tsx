@@ -47,32 +47,29 @@ export default function ProjectDetailsPage() {
   return (
     <div className="space-y-4">
       <LoadingOverlay visible={actionLoading} />
-      <Card>
+      <Card className="border-sky-300 bg-sky-100 dark:border-sky-700/60 dark:bg-slate-900">
         <div className="mb-2 flex items-center justify-between">
-          <h1 className="text-2xl font-semibold">{project.name}</h1>
+          <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">{project.name}</h1>
           <Link to="/" className="text-sm underline">Back</Link>
         </div>
         <p className="text-sm text-slate-600 dark:text-slate-300">Purpose: {project.purpose}</p>
         <p className="text-sm text-slate-600 dark:text-slate-300">Program Deploy: {project.programDeployed ? 'Yes' : 'No'}</p>
-        {project.techStack.length > 0 ? (
-          <div className="text-sm text-slate-600 dark:text-slate-300">
-            <span className="font-medium">Tech Stack:</span>
-            <span className="ml-1 inline-flex flex-wrap gap-x-3 gap-y-1">
-              {project.techStack.map((entry) => (
-                <a key={entry.name} href={entry.url} className="underline" target="_blank" rel="noreferrer">
-                  {entry.name}
-                </a>
-              ))}
-            </span>
-          </div>
-        ) : null}
+        <Link to={`/project/${project.id}/tech-stack`} className="inline-block text-sm font-medium text-sky-700 underline dark:text-sky-300">
+          Tech Stack →
+        </Link>
+        <Link to={`/project/${project.id}/snapshots`} className="block text-sm font-medium text-sky-700 underline dark:text-sky-300">
+          Project Snapshots →
+        </Link>
+        <Link to={`/project/${project.id}/deployment-information`} className="block text-sm font-medium text-sky-700 underline dark:text-sky-300">
+          Deployment Information →
+        </Link>
         {project.tags.length > 0 ? (
           <p className="text-sm text-slate-600 dark:text-slate-300">Tags: {project.tags.join(', ')}</p>
         ) : null}
         <p className="text-sm text-slate-600 dark:text-slate-300">Initiation Date: {project.initiationDate.toLocaleDateString()}</p>
       </Card>
 
-      <Card>
+      <Card className="border-sky-300 bg-sky-100/90 dark:border-sky-700/60 dark:bg-slate-900/95">
         <h2 className="mb-3 text-lg font-semibold">Add Daily Action</h2>
         <form className="grid gap-3" onSubmit={submitAction}>
           <Input
@@ -82,7 +79,7 @@ export default function ProjectDetailsPage() {
             onChange={(event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setTodayAction(event.target.value)}
           />
           <Input
-            label="Today's Action Notes"
+            label="Planned Next Steps"
             as="textarea"
             value={todayActionNotes}
             onChange={(event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setTodayActionNotes(event.target.value)}
@@ -94,14 +91,14 @@ export default function ProjectDetailsPage() {
         </form>
       </Card>
 
-      <Card>
+      <Card className="border-sky-300 bg-sky-100/90 dark:border-sky-700/60 dark:bg-slate-900/95">
         <h2 className="mb-3 text-lg font-semibold">Project History</h2>
         <div className="space-y-3">
           {orderedActions.length === 0 ? (
             <p className="text-sm text-slate-600 dark:text-slate-300">No actions logged yet.</p>
           ) : (
             orderedActions.map((action) => (
-              <div key={action.id} className="rounded-md border border-slate-200 p-3 dark:border-slate-700">
+              <div key={action.id} className="rounded-md border border-sky-300 bg-white p-3 dark:border-sky-700/50 dark:bg-slate-800/85">
                 <div className="mb-2 flex items-center justify-between">
                   <p className="text-sm font-medium">Date: {action.date.toLocaleString()}</p>
                   <Button variant="danger" onClick={() => setDeleteActionId(action.id)}>Delete</Button>
@@ -109,7 +106,7 @@ export default function ProjectDetailsPage() {
                 <p className="text-sm"><span className="font-medium">Last Action:</span> {action.lastAction || '-'}</p>
                 <p className="text-sm"><span className="font-medium">Last Action Notes:</span> {action.lastActionNotes || '-'}</p>
                 <p className="text-sm"><span className="font-medium">Today's Action:</span> {action.todayAction}</p>
-                <p className="text-sm"><span className="font-medium">Today's Action Notes:</span> {action.todayActionNotes}</p>
+                <p className="text-sm"><span className="font-medium">Planned Next Steps:</span> {action.todayActionNotes}</p>
               </div>
             ))
           )}
