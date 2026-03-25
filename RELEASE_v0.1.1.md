@@ -18,6 +18,7 @@ Patch release for targeted fixes and polish after `v0.1.0`.
 - Base tag: `v0.1.0`
 - Latest shipped commit before this release plan: `629700d`
 - Add any migration/compatibility notes here (if needed).
+- Official stack: React 19 + TypeScript + Vite frontend, Tailwind CSS 4 styling, Node.js + Express API, and Vitest + Testing Library for tests.
 
 ---
 

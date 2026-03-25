@@ -30,7 +30,7 @@ export default function ProjectDetailsPage() {
     );
   }
 
-  const orderedActions = [...project.actions].sort((a, b) => a.date.getTime() - b.date.getTime());
+  const orderedActions = [...project.actions].sort((a, b) => b.date.getTime() - a.date.getTime());
 
   const submitAction = async (event: FormEvent) => {
     event.preventDefault();

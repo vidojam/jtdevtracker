@@ -27,6 +27,7 @@ Feature release focused on project detail workflows: snapshots, deployment track
 - Release commit: `23f68f8`
 - Release tag: `v0.1.2`
 - Snapshot schema changed from page-path metadata to captured screen-state; legacy entries are normalized with fallback values.
+- Official stack: React 19 + TypeScript + Vite frontend, Tailwind CSS 4 styling, Node.js + Express API, and Vitest + Testing Library for tests.
 
 ---
 

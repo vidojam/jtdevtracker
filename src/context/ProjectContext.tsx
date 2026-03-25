@@ -56,6 +56,28 @@ const normalizeDeploymentInfo = (payload: unknown): DeploymentInfo | undefined =
   };
 };
 
+const normalizeTechStackEntries = (payload: unknown): TechStackEntry[] => {
+  if (!Array.isArray(payload)) return [];
+
+  return payload.flatMap((entry) => {
+    if (typeof entry === 'string') {
+      const name = entry.trim();
+      return name ? [{ name, url: '' }] : [];
+    }
+
+    if (!entry || typeof entry !== 'object') return [];
+
+    const item = entry as Partial<TechStackEntry>;
+    const name = typeof item.name === 'string' ? item.name.trim() : '';
+    if (!name) return [];
+
+    return [{
+      name,
+      url: typeof item.url === 'string' ? item.url : '',
+    }];
+  });
+};
+
 const buildSnapshotScreen = (project: Pick<Project, 'purpose' | 'programDeployed' | 'techStack' | 'tags' | 'actions'>): ProjectSnapshotScreen => {
   const lastAction = project.actions.at(-1);
   return {
@@ -87,8 +109,8 @@ const normalizeSnapshotScreen = (
       ? item.tags.filter((tag): tag is string => typeof tag === 'string')
       : fallback.tags,
     totalActions: typeof item.totalActions === 'number' ? item.totalActions : fallback.totalActions,
-    lastAction: typeof item.lastAction === 'string' ? item.lastAction : fallback.lastAction,
-    lastActionNotes: typeof item.lastActionNotes === 'string' ? item.lastActionNotes : fallback.lastActionNotes,
+    lastAction: typeof item.lastAction === 'string' ? item.lastAction : undefined,
+    lastActionNotes: typeof item.lastActionNotes === 'string' ? item.lastActionNotes : undefined,
   };
 };
 
@@ -131,12 +153,9 @@ const normalizeImportedProjects = (payload: unknown): Project[] => {
         }))
       : [];
 
-    const techStack = Array.isArray(item.techStack)
-      ? item.techStack.filter((e): e is TechStackEntry =>
-          typeof e === 'object' && e !== null &&
-          typeof (e as TechStackEntry).name === 'string' &&
-          typeof (e as TechStackEntry).url === 'string'
-        )
+    const normalizedTechStack = normalizeTechStackEntries(item.techStack);
+    const techStack = normalizedTechStack.length > 0
+      ? normalizedTechStack
       : (typeof item.techStackLink === 'string' && item.techStackLink
           ? [{ name: 'Tech Stack', url: item.techStackLink }]
           : []);
@@ -196,12 +215,9 @@ const parseProjects = (raw: string | null): Project[] => {
     const parsed = JSON.parse(raw) as StoredProject[];
     return parsed.map(({ techStackLink, techStack: rawTechStack, ...project }) => {
       const actions = project.actions.map((action) => ({ ...action, date: new Date(action.date) }));
-      const techStack = Array.isArray(rawTechStack)
-        ? rawTechStack.filter((e): e is TechStackEntry =>
-            typeof e === 'object' && e !== null &&
-            typeof (e as TechStackEntry).name === 'string' &&
-            typeof (e as TechStackEntry).url === 'string'
-          )
+      const normalizedTechStack = normalizeTechStackEntries(rawTechStack);
+      const techStack = normalizedTechStack.length > 0
+        ? normalizedTechStack
         : (typeof techStackLink === 'string' && techStackLink
             ? [{ name: 'Tech Stack', url: techStackLink }]
             : []);
@@ -246,12 +262,9 @@ const parseProjectsFromUnknown = (payload: unknown): Project[] => {
       techStackLink?: string;
     };
 
-    const techStack = Array.isArray(item.techStack)
-      ? item.techStack.filter((e): e is TechStackEntry =>
-          typeof e === 'object' && e !== null &&
-          typeof (e as TechStackEntry).name === 'string' &&
-          typeof (e as TechStackEntry).url === 'string'
-        )
+    const normalizedTechStack = normalizeTechStackEntries(item.techStack);
+    const techStack = normalizedTechStack.length > 0
+      ? normalizedTechStack
       : (typeof item.techStackLink === 'string' && item.techStackLink
           ? [{ name: 'Tech Stack', url: item.techStackLink }]
           : []);

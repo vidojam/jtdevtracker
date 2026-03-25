@@ -63,7 +63,7 @@ const dedupeTechStack = (entries: TechStackEntry[]): TechStackEntry[] => {
 
 export default function DashboardPage() {
   const { projects, isLoading, actionLoading, storageMode, addProject, updateProject, deleteProject, toggleDeploy, importProjects } = useProjects();
-  const [sortOrder, setSortOrder] = useState<SortOrder>('oldest');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('newest');
   const [searchTerm, setSearchTerm] = useState('');
   const [form, setForm] = useState<ProjectFormState>(emptyForm);
   const [errors, setErrors] = useState<Partial<ProjectFormState>>({});

@@ -4,13 +4,16 @@ A production-ready React + TypeScript application to track software projects and
 
 ## Tech Stack
 
+Official stack: React 19 + TypeScript + Vite frontend, Tailwind CSS 4 styling, Node.js + Express API, and Vitest + Testing Library for tests.
+
 - React + TypeScript (Vite)
-- React Router
-- React Context for state management
-- Tailwind CSS
+- React 19 + TypeScript 5 + Vite 7
+- React Router 7
+- React Context API for state management
+- Tailwind CSS 4
 - localStorage persistence
-- Local sync API with shared JSON storage (automatic multi-window sync)
-- Vitest + React Testing Library
+- Node.js + Express 5 local sync API with shared JSON storage (automatic multi-window sync)
+- Vitest 4 + React Testing Library + user-event + jsdom
 
 ## Features
 

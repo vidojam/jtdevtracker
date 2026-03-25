@@ -1,5 +1,5 @@
 {
-  "updatedAt": 1773760734803,
+  "updatedAt": 1774474461719,
   "projects": [
     {
       "id": "aa70dbe4-fc46-426e-9897-6b17d4693fb8",
@@ -10,7 +10,8 @@
       "techStack": [],
       "colorCode": "#FEF3C7",
       "tags": [],
-      "actions": []
+      "actions": [],
+      "snapshots": []
     },
     {
       "id": "b47147eb-d778-4bd3-9170-001fbc9a0620",
@@ -21,7 +22,8 @@
       "techStack": [],
       "colorCode": "#FCE7F3",
       "tags": [],
-      "actions": []
+      "actions": [],
+      "snapshots": []
     },
     {
       "id": "bf3e7b34-aa5e-426d-b352-894b9e108c8d",
@@ -32,15 +34,21 @@
       "techStack": [],
       "colorCode": "#DCFCE7",
       "tags": [],
-      "actions": []
+      "actions": [],
+      "snapshots": []
     },
     {
       "id": "4a2b2e9e-2931-48b7-a8b1-4c207c30387f",
       "name": "jtdevtracker",
       "initiationDate": "2026-03-06T00:00:00.000Z",
       "purpose": "To track all my project dev coding in one place",
-      "programDeployed": true,
-      "techStack": [],
+      "programDeployed": false,
+      "techStack": [
+        {
+          "name": "Frontend: React 19 + TypeScript + Vite Styling: Tailwind CSS 4 Routing/UI: react-router-dom Backend API: Node.js + Express + CORS Tooling: concurrently (runs API + client together) Testing: Vitest + Testing Library (@testing-library/react, @testing-library/user-event) + jsdom Build: TypeScript compiler (tsc) + Vite build Deploy config present: Render (render.yaml)",
+          "url": ""
+        }
+      ],
       "colorCode": "#E0F2FE",
       "tags": [],
       "actions": [
@@ -49,6 +57,125 @@
           "date": "2026-03-09T17:28:26.898Z",
           "todayAction": "Reduce dialog boxes height.",
           "todayActionNotes": "AI reduced and rearrange text inside dialog boxes"
+        },
+        {
+          "id": "bdabead5-4478-455c-8aa8-96b20dc90b4d",
+          "date": "2026-03-24T19:24:06.957Z",
+          "lastAction": "Reduce dialog boxes height.",
+          "lastActionNotes": "AI reduced and rearrange text inside dialog boxes",
+          "todayAction": "None",
+          "todayActionNotes": "Sort default should be newest project first."
+        },
+        {
+          "id": "5d21472e-99ea-49c1-a63f-b09a27e03813",
+          "date": "2026-03-25T21:34:21.709Z",
+          "lastAction": "None",
+          "lastActionNotes": "Sort default should be newest project first.",
+          "todayAction": "Changed project sort default to newest project first. Also requested fix of persistant data on tech stack and project snapshots",
+          "todayActionNotes": "Test deployment information section with new deploy. Check if this program can be deployed on render with no additional cost."
+        }
+      ],
+      "snapshots": [
+        {
+          "id": "5020a307-1c9f-4b89-b061-d4f514392337",
+          "date": "2026-03-24T19:24:06.957Z",
+          "trigger": "action-added",
+          "screen": {
+            "purpose": "To track all my project dev coding in one place",
+            "programDeployed": true,
+            "techStack": [],
+            "tags": [],
+            "totalActions": 2,
+            "lastAction": "None",
+            "lastActionNotes": "Sort default should be newest project first."
+          }
+        },
+        {
+          "id": "3bbada7a-2cbd-4723-9102-b304766fa128",
+          "date": "2026-03-25T21:20:15.529Z",
+          "trigger": "deploy-toggled",
+          "screen": {
+            "purpose": "To track all my project dev coding in one place",
+            "programDeployed": false,
+            "techStack": [],
+            "tags": [],
+            "totalActions": 2,
+            "lastAction": "None",
+            "lastActionNotes": "Sort default should be newest project first."
+          }
+        },
+        {
+          "id": "2eb03d33-c8f2-4734-96e1-efd6cda22455",
+          "date": "2026-03-25T21:34:21.709Z",
+          "trigger": "action-added",
+          "screen": {
+            "purpose": "To track all my project dev coding in one place",
+            "programDeployed": false,
+            "techStack": [
+              "Frontend: React 19 + TypeScript + Vite Styling: Tailwind CSS 4 Routing/UI: react-router-dom Backend API: Node.js + Express + CORS Tooling: concurrently (runs API + client together) Testing: Vitest + Testing Library (@testing-library/react, @testing-library/user-event) + jsdom Build: TypeScript compiler (tsc) + Vite build Deploy config present: Render (render.yaml)"
+            ],
+            "tags": [],
+            "totalActions": 3,
+            "lastAction": "Changed project sort default to newest project first. Also requested fix of persistant data on tech stack and project snapshots",
+            "lastActionNotes": "Test deployment information section with new deploy. Check if this program can be deployed on render with no additional cost."
+          }
+        }
+      ]
+    },
+    {
+      "id": "4bda1a99-2cd7-4ff6-9072-49f4153459e1",
+      "name": "PromptAssist",
+      "initiationDate": "2026-03-18T00:00:00.000Z",
+      "purpose": "A program to assist in generating AI prompts",
+      "programDeployed": false,
+      "techStack": [
+        {
+          "name": "React, Javascript, CSS",
+          "url": ""
+        }
+      ],
+      "colorCode": "#EDE9FE",
+      "tags": [],
+      "actions": [
+        {
+          "id": "24e0ccc6-a835-4bc0-817b-d1f358a37ae2",
+          "date": "2026-03-24T19:22:45.605Z",
+          "todayAction": "Attemp to code in Burger King, but not able to.",
+          "todayActionNotes": "Would like to see checkmark for sub prompt items. A check only type page"
+        }
+      ],
+      "snapshots": [
+        {
+          "id": "0be59881-afc8-49cb-a50b-42668c253795",
+          "date": "2026-03-24T19:19:21.556Z",
+          "trigger": "project-created",
+          "screen": {
+            "purpose": "A program to assist in generating AI prompts",
+            "programDeployed": false,
+            "techStack": [
+              "React, Javascript, CSS"
+            ],
+            "tags": [],
+            "totalActions": 0,
+            "lastAction": "Attemp to code in Burger King, but not able to.",
+            "lastActionNotes": "Would like to see checkmark for sub prompt items. A check only type page"
+          }
+        },
+        {
+          "id": "796a02f0-062d-4e0c-8b1d-8a8031632050",
+          "date": "2026-03-24T19:22:45.605Z",
+          "trigger": "action-added",
+          "screen": {
+            "purpose": "A program to assist in generating AI prompts",
+            "programDeployed": false,
+            "techStack": [
+              "React, Javascript, CSS"
+            ],
+            "tags": [],
+            "totalActions": 1,
+            "lastAction": "Attemp to code in Burger King, but not able to.",
+            "lastActionNotes": "Would like to see checkmark for sub prompt items. A check only type page"
+          }
         }
       ]
     }
