@@ -91,8 +91,11 @@ This project is configured to run as a Render Web Service using the included `re
 3. Choose **Blueprint** (or Web Service) and use the values from `render.yaml`:
   - Build command: `npm install && npm run build`
   - Start command: `node server/index.js`
+  - Environment variable: `DATA_DIR=/var/data`
+  - Persistent disk mount: `/var/data`
 
 ### Data persistence
 
 The API currently stores data in `server/data/projects.json`.
+In production, the API stores data in `${DATA_DIR}/projects.json` when `DATA_DIR` is set.
 Use a persistent disk in Render and mount it so this file survives restarts and redeployments.

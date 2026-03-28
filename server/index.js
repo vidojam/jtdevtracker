@@ -9,7 +9,8 @@ const port = Number(process.env.PORT) || 4000;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const dataDir = path.join(__dirname, 'data');
+const configuredDataDir = process.env.DATA_DIR?.trim();
+const dataDir = configuredDataDir ? path.resolve(configuredDataDir) : path.join(__dirname, 'data');
 const dataFilePath = path.join(dataDir, 'projects.json');
 const clientDistPath = path.join(__dirname, '..', 'dist');
 const isProduction = process.env.NODE_ENV === 'production';
@@ -84,4 +85,5 @@ if (isProduction) {
 app.listen(port, '0.0.0.0', async () => {
   await ensureDataFile();
   console.log(`JT Dev Tracker running at http://localhost:${port}`);
+  console.log(`Data file: ${dataFilePath}`);
 });

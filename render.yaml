@@ -5,4 +5,11 @@ services:
     plan: free
     buildCommand: npm install && npm run build
     startCommand: node server/index.js
+    envVars:
+      - key: DATA_DIR
+        value: /var/data
+    disk:
+      name: jtdevtracker-data
+      mountPath: /var/data
+      sizeGB: 1
     autoDeploy: true
