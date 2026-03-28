@@ -325,6 +325,12 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const [storageMode, setStorageMode] = useState<'remote' | 'local'>('local');
   const remoteUpdatedAtRef = useRef(0);
   const skipNextRemotePushRef = useRef(false);
+  const localDirtyRef = useRef(false);
+  const projectsRef = useRef<Project[]>([]);
+
+  useEffect(() => {
+    projectsRef.current = projects;
+  }, [projects]);
 
   useEffect(() => {
     let mounted = true;
@@ -340,12 +346,14 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
         setProjects(parseProjectsFromUnknown(payload.projects));
         const updatedAt = typeof payload.updatedAt === 'number' ? payload.updatedAt : 0;
         remoteUpdatedAtRef.current = updatedAt;
+        localDirtyRef.current = false;
         setStorageMode('remote');
         setIsLoading(false);
       } catch {
         if (!mounted) return;
         const stored = localStorage.getItem(STORAGE_KEY);
         setProjects(parseProjects(stored));
+        localDirtyRef.current = false;
         setStorageMode('local');
         setIsLoading(false);
       }
@@ -378,6 +386,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
           const updatedAt = typeof payload.updatedAt === 'number' ? payload.updatedAt : Date.now();
           remoteUpdatedAtRef.current = updatedAt;
         } catch {
+          localDirtyRef.current = true;
           setStorageMode('local');
           localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
         }
@@ -411,10 +420,51 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     return () => clearInterval(timer);
   }, [isLoading, storageMode]);
 
+  useEffect(() => {
+    if (isLoading || storageMode !== 'local') return;
+
+    const timer = setInterval(async () => {
+      try {
+        const response = await fetch(API_ENDPOINT);
+        if (!response.ok) return;
+
+        if (localDirtyRef.current) {
+          const syncResponse = await fetch(API_ENDPOINT, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ projects: projectsRef.current }),
+          });
+          if (!syncResponse.ok) return;
+
+          const syncPayload = (await syncResponse.json()) as { updatedAt?: number };
+          remoteUpdatedAtRef.current = typeof syncPayload.updatedAt === 'number' ? syncPayload.updatedAt : Date.now();
+          localDirtyRef.current = false;
+          skipNextRemotePushRef.current = true;
+          setStorageMode('remote');
+          return;
+        }
+
+        const payload = (await response.json()) as { updatedAt?: number; projects?: unknown[] };
+        skipNextRemotePushRef.current = true;
+        setProjects(parseProjectsFromUnknown(payload.projects));
+        remoteUpdatedAtRef.current = typeof payload.updatedAt === 'number' ? payload.updatedAt : Date.now();
+        localDirtyRef.current = false;
+        setStorageMode('remote');
+      } catch {
+        // Keep local mode and retry on next interval.
+      }
+    }, 5000);
+
+    return () => clearInterval(timer);
+  }, [isLoading, storageMode]);
+
   const runAction = async (handler: () => void): Promise<void> => {
     setActionLoading(true);
     await new Promise<void>((resolve) => {
       setTimeout(() => {
+        if (storageMode === 'local') {
+          localDirtyRef.current = true;
+        }
         handler();
         resolve();
       }, 150);
