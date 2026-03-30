@@ -3,6 +3,7 @@ import type { DeploymentInfo, Project, ProjectAction, ProjectSnapshot, ProjectSn
 import { generateId, getProjectColor } from '../utils/projectUtils';
 
 const STORAGE_KEY = 'jt-dev-tracker-projects';
+const LOCAL_DIRTY_KEY = 'jt-dev-tracker-local-dirty';
 const API_ENDPOINT = '/api/projects';
 
 interface ProjectInput {
@@ -336,6 +337,9 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     let mounted = true;
 
     const initialize = async () => {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      const hasLocalDirtyFlag = localStorage.getItem(LOCAL_DIRTY_KEY) === 'true';
+
       try {
         const response = await fetch(API_ENDPOINT);
         if (!response.ok) {
@@ -343,17 +347,31 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
         }
         const payload = (await response.json()) as { updatedAt?: number; projects?: unknown[] };
         if (!mounted) return;
+
+        if (hasLocalDirtyFlag && stored) {
+          setProjects(parseProjects(stored));
+          localDirtyRef.current = true;
+          setStorageMode('local');
+          setIsLoading(false);
+          return;
+        }
+
         setProjects(parseProjectsFromUnknown(payload.projects));
         const updatedAt = typeof payload.updatedAt === 'number' ? payload.updatedAt : 0;
         remoteUpdatedAtRef.current = updatedAt;
         localDirtyRef.current = false;
+        localStorage.removeItem(LOCAL_DIRTY_KEY);
         setStorageMode('remote');
         setIsLoading(false);
       } catch {
         if (!mounted) return;
-        const stored = localStorage.getItem(STORAGE_KEY);
         setProjects(parseProjects(stored));
-        localDirtyRef.current = false;
+        localDirtyRef.current = hasLocalDirtyFlag;
+        if (hasLocalDirtyFlag) {
+          localStorage.setItem(LOCAL_DIRTY_KEY, 'true');
+        } else {
+          localStorage.removeItem(LOCAL_DIRTY_KEY);
+        }
         setStorageMode('local');
         setIsLoading(false);
       }
@@ -385,8 +403,10 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
           const payload = (await response.json()) as { updatedAt?: number };
           const updatedAt = typeof payload.updatedAt === 'number' ? payload.updatedAt : Date.now();
           remoteUpdatedAtRef.current = updatedAt;
+          localStorage.removeItem(LOCAL_DIRTY_KEY);
         } catch {
           localDirtyRef.current = true;
+          localStorage.setItem(LOCAL_DIRTY_KEY, 'true');
           setStorageMode('local');
           localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
         }
@@ -439,6 +459,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
           const syncPayload = (await syncResponse.json()) as { updatedAt?: number };
           remoteUpdatedAtRef.current = typeof syncPayload.updatedAt === 'number' ? syncPayload.updatedAt : Date.now();
           localDirtyRef.current = false;
+          localStorage.removeItem(LOCAL_DIRTY_KEY);
           skipNextRemotePushRef.current = true;
           setStorageMode('remote');
           return;
@@ -449,6 +470,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
         setProjects(parseProjectsFromUnknown(payload.projects));
         remoteUpdatedAtRef.current = typeof payload.updatedAt === 'number' ? payload.updatedAt : Date.now();
         localDirtyRef.current = false;
+        localStorage.removeItem(LOCAL_DIRTY_KEY);
         setStorageMode('remote');
       } catch {
         // Keep local mode and retry on next interval.
@@ -464,6 +486,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       setTimeout(() => {
         if (storageMode === 'local') {
           localDirtyRef.current = true;
+          localStorage.setItem(LOCAL_DIRTY_KEY, 'true');
         }
         handler();
         resolve();

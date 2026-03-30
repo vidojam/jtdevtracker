@@ -103,10 +103,10 @@ export default function ProjectDetailsPage() {
                   <p className="text-sm font-medium">Date: {action.date.toLocaleString()}</p>
                   <Button variant="danger" onClick={() => setDeleteActionId(action.id)}>Delete</Button>
                 </div>
+                <p className="text-sm"><span className="font-medium">Planned Next Steps:</span> {action.todayActionNotes}</p>
                 <p className="text-sm"><span className="font-medium">Last Action:</span> {action.lastAction || '-'}</p>
                 <p className="text-sm"><span className="font-medium">Last Action Notes:</span> {action.lastActionNotes || '-'}</p>
                 <p className="text-sm"><span className="font-medium">Today's Action:</span> {action.todayAction}</p>
-                <p className="text-sm"><span className="font-medium">Planned Next Steps:</span> {action.todayActionNotes}</p>
               </div>
             ))
           )}

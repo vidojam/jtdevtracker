@@ -1,5 +1,5 @@
 {
-  "updatedAt": 1774474461719,
+  "updatedAt": 1774896148099,
   "projects": [
     {
       "id": "aa70dbe4-fc46-426e-9897-6b17d4693fb8",
@@ -43,6 +43,13 @@
       "initiationDate": "2026-03-06T00:00:00.000Z",
       "purpose": "To track all my project dev coding in one place",
       "programDeployed": false,
+      "deploymentInfo": {
+        "deployedOn": "Render",
+        "date": "2026-03-26",
+        "cost": "$.00",
+        "term": "Monthly",
+        "benefits": "Render does not charge for hobby projects"
+      },
       "techStack": [
         {
           "name": "Frontend: React 19 + TypeScript + Vite Styling: Tailwind CSS 4 Routing/UI: react-router-dom Backend API: Node.js + Express + CORS Tooling: concurrently (runs API + client together) Testing: Vitest + Testing Library (@testing-library/react, @testing-library/user-event) + jsdom Build: TypeScript compiler (tsc) + Vite build Deploy config present: Render (render.yaml)",
@@ -108,6 +115,54 @@
           "id": "2eb03d33-c8f2-4734-96e1-efd6cda22455",
           "date": "2026-03-25T21:34:21.709Z",
           "trigger": "action-added",
+          "screen": {
+            "purpose": "To track all my project dev coding in one place",
+            "programDeployed": false,
+            "techStack": [
+              "Frontend: React 19 + TypeScript + Vite Styling: Tailwind CSS 4 Routing/UI: react-router-dom Backend API: Node.js + Express + CORS Tooling: concurrently (runs API + client together) Testing: Vitest + Testing Library (@testing-library/react, @testing-library/user-event) + jsdom Build: TypeScript compiler (tsc) + Vite build Deploy config present: Render (render.yaml)"
+            ],
+            "tags": [],
+            "totalActions": 3,
+            "lastAction": "Changed project sort default to newest project first. Also requested fix of persistant data on tech stack and project snapshots",
+            "lastActionNotes": "Test deployment information section with new deploy. Check if this program can be deployed on render with no additional cost."
+          }
+        },
+        {
+          "id": "2b02e8ff-e440-4657-9e02-caac56658a51",
+          "date": "2026-03-30T18:41:21.317Z",
+          "trigger": "project-updated",
+          "screen": {
+            "purpose": "To track all my project dev coding in one place",
+            "programDeployed": false,
+            "techStack": [
+              "Frontend: React 19 + TypeScript + Vite Styling: Tailwind CSS 4 Routing/UI: react-router-dom Backend API: Node.js + Express + CORS Tooling: concurrently (runs API + client together) Testing: Vitest + Testing Library (@testing-library/react, @testing-library/user-event) + jsdom Build: TypeScript compiler (tsc) + Vite build Deploy config present: Render (render.yaml)"
+            ],
+            "tags": [],
+            "totalActions": 3,
+            "lastAction": "Changed project sort default to newest project first. Also requested fix of persistant data on tech stack and project snapshots",
+            "lastActionNotes": "Test deployment information section with new deploy. Check if this program can be deployed on render with no additional cost."
+          }
+        },
+        {
+          "id": "6d3550f2-3a95-4672-be77-0434e954a1ca",
+          "date": "2026-03-30T18:41:24.598Z",
+          "trigger": "project-updated",
+          "screen": {
+            "purpose": "To track all my project dev coding in one place",
+            "programDeployed": false,
+            "techStack": [
+              "Frontend: React 19 + TypeScript + Vite Styling: Tailwind CSS 4 Routing/UI: react-router-dom Backend API: Node.js + Express + CORS Tooling: concurrently (runs API + client together) Testing: Vitest + Testing Library (@testing-library/react, @testing-library/user-event) + jsdom Build: TypeScript compiler (tsc) + Vite build Deploy config present: Render (render.yaml)"
+            ],
+            "tags": [],
+            "totalActions": 3,
+            "lastAction": "Changed project sort default to newest project first. Also requested fix of persistant data on tech stack and project snapshots",
+            "lastActionNotes": "Test deployment information section with new deploy. Check if this program can be deployed on render with no additional cost."
+          }
+        },
+        {
+          "id": "bddaefb2-a958-4113-8b6e-e6cf957ed050",
+          "date": "2026-03-30T18:41:29.166Z",
+          "trigger": "project-updated",
           "screen": {
             "purpose": "To track all my project dev coding in one place",
             "programDeployed": false,
