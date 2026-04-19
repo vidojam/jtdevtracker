@@ -1,5 +1,5 @@
 {
-  "updatedAt": 1774896148099,
+  "updatedAt": 1776561297683,
   "projects": [
     {
       "id": "aa70dbe4-fc46-426e-9897-6b17d4693fb8",
@@ -42,7 +42,7 @@
       "name": "jtdevtracker",
       "initiationDate": "2026-03-06T00:00:00.000Z",
       "purpose": "To track all my project dev coding in one place",
-      "programDeployed": false,
+      "programDeployed": true,
       "deploymentInfo": {
         "deployedOn": "Render",
         "date": "2026-03-26",
@@ -174,6 +174,22 @@
             "lastAction": "Changed project sort default to newest project first. Also requested fix of persistant data on tech stack and project snapshots",
             "lastActionNotes": "Test deployment information section with new deploy. Check if this program can be deployed on render with no additional cost."
           }
+        },
+        {
+          "id": "6e142359-36cf-4339-aff8-56193cb1b5b3",
+          "date": "2026-03-31T22:57:30.220Z",
+          "trigger": "deploy-toggled",
+          "screen": {
+            "purpose": "To track all my project dev coding in one place",
+            "programDeployed": true,
+            "techStack": [
+              "Frontend: React 19 + TypeScript + Vite Styling: Tailwind CSS 4 Routing/UI: react-router-dom Backend API: Node.js + Express + CORS Tooling: concurrently (runs API + client together) Testing: Vitest + Testing Library (@testing-library/react, @testing-library/user-event) + jsdom Build: TypeScript compiler (tsc) + Vite build Deploy config present: Render (render.yaml)"
+            ],
+            "tags": [],
+            "totalActions": 3,
+            "lastAction": "Changed project sort default to newest project first. Also requested fix of persistant data on tech stack and project snapshots",
+            "lastActionNotes": "Test deployment information section with new deploy. Check if this program can be deployed on render with no additional cost."
+          }
         }
       ]
     },
@@ -230,6 +246,86 @@
             "totalActions": 1,
             "lastAction": "Attemp to code in Burger King, but not able to.",
             "lastActionNotes": "Would like to see checkmark for sub prompt items. A check only type page"
+          }
+        }
+      ]
+    },
+    {
+      "id": "2c62ad72-e80d-4560-b738-8f14b476da01",
+      "name": "mytickertracker",
+      "initiationDate": "2026-03-31T00:00:00.000Z",
+      "purpose": "Tracker my stock price and changes over a 5 day or ten day period",
+      "programDeployed": false,
+      "techStack": [],
+      "colorCode": "#FEE2E2",
+      "tags": [],
+      "actions": [
+        {
+          "id": "189dd43f-b97e-4b1d-80b7-996f64563f5d",
+          "date": "2026-04-02T16:01:13.747Z",
+          "todayAction": "Increased text size on main page for easier viewing. Added a table for adding multple stocks and the ablity to delete a stock.",
+          "todayActionNotes": "Test phone app"
+        },
+        {
+          "id": "6142ff57-513a-4ea2-904d-beb57d31115a",
+          "date": "2026-04-04T21:47:55.439Z",
+          "lastAction": "Increased text size on main page for easier viewing. Added a table for adding multple stocks and the ablity to delete a stock.",
+          "lastActionNotes": "Test phone app",
+          "todayAction": "Added anoth stock to track - GCT & QUBT",
+          "todayActionNotes": "test"
+        }
+      ],
+      "snapshots": [
+        {
+          "id": "095b4dc0-a00e-4081-bda0-85ea83d299e8",
+          "date": "2026-04-02T15:57:17.181Z",
+          "trigger": "project-created",
+          "screen": {
+            "purpose": "Tracker my stock price and changes over a 5 day or ten day period",
+            "programDeployed": true,
+            "techStack": [],
+            "tags": [],
+            "totalActions": 0
+          }
+        },
+        {
+          "id": "1d256935-2923-4bd9-ae03-b9bba64454fb",
+          "date": "2026-04-02T15:57:32.462Z",
+          "trigger": "deploy-toggled",
+          "screen": {
+            "purpose": "Tracker my stock price and changes over a 5 day or ten day period",
+            "programDeployed": false,
+            "techStack": [],
+            "tags": [],
+            "totalActions": 0
+          }
+        },
+        {
+          "id": "75785df9-cc87-4259-832b-e2c25a777c5e",
+          "date": "2026-04-02T16:01:13.747Z",
+          "trigger": "action-added",
+          "screen": {
+            "purpose": "Tracker my stock price and changes over a 5 day or ten day period",
+            "programDeployed": false,
+            "techStack": [],
+            "tags": [],
+            "totalActions": 1,
+            "lastAction": "Increased text size on main page for easier viewing. Added a table for adding multple stocks and the ablity to delete a stock.",
+            "lastActionNotes": "Test phone app"
+          }
+        },
+        {
+          "id": "07a56f14-9498-4aa2-ae0d-970f19483cf9",
+          "date": "2026-04-04T21:47:55.439Z",
+          "trigger": "action-added",
+          "screen": {
+            "purpose": "Tracker my stock price and changes over a 5 day or ten day period",
+            "programDeployed": false,
+            "techStack": [],
+            "tags": [],
+            "totalActions": 2,
+            "lastAction": "Added anoth stock to track - GCT & QUBT",
+            "lastActionNotes": "test"
           }
         }
       ]

@@ -8,6 +8,7 @@ import Card from '../components/ui/Card';
 import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
 import Modal from '../components/ui/Modal';
+import { useVoiceRecognition } from '../utils/useVoiceRecognition';
 import LoadingOverlay from '../components/ui/LoadingOverlay';
 
 interface ProjectFormState {
@@ -76,6 +77,64 @@ export default function DashboardPage() {
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission | 'unsupported'>(
     notificationSupported ? Notification.permission : 'unsupported',
   );
+
+  // Voice recognition hook
+  const { transcript, isListening, error: voiceError, start, stop } = useVoiceRecognition();
+
+  // Start listening automatically on mount and after each result
+  useEffect(() => {
+    if (!isListening) {
+      start();
+    }
+    // Optionally, stop listening on unmount
+    return () => stop();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isListening]);
+  // Read out current form fields
+  function speakCurrentFields() {
+    let speakText = '';
+    if (form.name) speakText += `Project name: ${form.name}. `;
+    if (form.purpose) speakText += `Purpose: ${form.purpose}. `;
+    // Optionally add more fields if needed
+    if (!speakText) speakText = 'No project name or purpose entered.';
+    const utterance = new window.SpeechSynthesisUtterance(speakText);
+    window.speechSynthesis.speak(utterance);
+  }
+
+  // Parse transcript for project fields
+  function parseVoiceInput(text: string) {
+    // Simple parsing: expects format like "Project [name], Purpose [purpose], Last action [last], Next step [next]"
+    const result: Partial<ProjectFormState> & { lastAction?: string; nextStep?: string } = {};
+    const nameMatch = text.match(/project name ([^,]+)/i);
+    if (nameMatch) result.name = nameMatch[1].trim();
+    const purposeMatch = text.match(/purpose ([^,]+)/i);
+    if (purposeMatch) result.purpose = purposeMatch[1].trim();
+    // Optionally extract last action and next step for future use
+    const lastActionMatch = text.match(/last action ([^,]+)/i);
+    if (lastActionMatch) (result as any).lastAction = lastActionMatch[1].trim();
+    const nextStepMatch = text.match(/next step ([^,]+)/i);
+    if (nextStepMatch) (result as any).nextStep = nextStepMatch[1].trim();
+    return result;
+  }
+
+  // When transcript updates, fill form fields
+  const [spokenText, setSpokenText] = useState('');
+  useEffect(() => {
+    if (transcript) {
+      const parsed = parseVoiceInput(transcript);
+      let speakText = '';
+      if (parsed.name) speakText += `Project name: ${parsed.name}. `;
+      if (parsed.purpose) speakText += `Purpose: ${parsed.purpose}. `;
+      if ((parsed as any).lastAction) speakText += `Last action: ${(parsed as any).lastAction}. `;
+      if ((parsed as any).nextStep) speakText += `Next step: ${(parsed as any).nextStep}. `;
+      if (!speakText) speakText = `You said: ${transcript}`;
+      setSpokenText(speakText);
+      if (speakText) {
+        const utterance = new window.SpeechSynthesisUtterance(speakText);
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+  }, [transcript]);
 
   const filtered = useMemo(() => {
     return sortProjects(filterProjects(projects, searchTerm), sortOrder);
@@ -227,6 +286,15 @@ export default function DashboardPage() {
           </span>
         </div>
         <form className="grid gap-3 md:grid-cols-2" onSubmit={submit}>
+          <div className="md:col-span-2 flex items-center gap-2 mb-2">
+            {voiceError ? <span className="text-xs text-red-600">{voiceError}</span> : null}
+            {transcript && !isListening ? (
+              <span className="text-xs text-green-700">Recognized: {transcript}</span>
+            ) : null}
+            {spokenText && !isListening ? (
+              <span className="text-xs text-blue-700">Speaking: {spokenText}</span>
+            ) : null}
+          </div>
           <Input
             label="Project Name"
             value={form.name}

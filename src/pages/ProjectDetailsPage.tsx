@@ -1,3 +1,15 @@
+        <button
+          type="button"
+          style={{ background: '#fcc', color: '#900', fontSize: '14px', padding: '8px 16px', borderRadius: '4px', marginBottom: '8px', border: '2px solid #c99', fontWeight: 'bold', marginLeft: '8px' }}
+          onClick={() => {
+            if ('speechSynthesis' in window) {
+              window.speechSynthesis.cancel();
+            }
+          }}
+        >
+          Stop Speaking
+        </button>
+import React from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useMemo, useState, type ChangeEvent, type FormEvent } from 'react';
 import { useProjects } from '../context/ProjectContext';
@@ -6,6 +18,7 @@ import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
 import Modal from '../components/ui/Modal';
 import LoadingOverlay from '../components/ui/LoadingOverlay';
+import { useVoiceRecognition } from '../utils/useVoiceRecognition';
 
 export default function ProjectDetailsPage() {
   const { projectId } = useParams();
@@ -15,7 +28,111 @@ export default function ProjectDetailsPage() {
   const [error, setError] = useState('');
   const [deleteActionId, setDeleteActionId] = useState<string | null>(null);
 
+  // Voice recognition hook
+  const { transcript, isListening, error: voiceError, start, stop } = useVoiceRecognition();
+
+  // Debug: log recognition lifecycle
+  React.useEffect(() => {
+    console.log('Recognition listening:', isListening);
+  }, [isListening]);
+  React.useEffect(() => {
+    if (voiceError) console.error('Recognition error:', voiceError);
+  }, [voiceError]);
+
+  // Start listening on mount, and stop on unmount
+  React.useEffect(() => {
+    start();
+    return () => stop();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Read out current action fields
+  function speakCurrentFields() {
+    let speakText = '';
+    if (todayAction) speakText += `Last action: ${todayAction}. `;
+    if (todayActionNotes) speakText += `Next step: ${todayActionNotes}. `;
+    if (!speakText) speakText = 'No last action or next step entered.';
+    const utterance = new window.SpeechSynthesisUtterance(speakText);
+    window.speechSynthesis.speak(utterance);
+  }
+
+  // Parse transcript for last action and next step
+  function parseVoiceInput(text: string) {
+    // Expects: "Last action [text], Next step [text]"
+    const result: { lastAction?: string; nextStep?: string } = {};
+    const lastActionMatch = text.match(/last action ([^,]+)/i);
+    if (lastActionMatch) result.lastAction = lastActionMatch[1].trim();
+    const nextStepMatch = text.match(/next step ([^,]+)/i);
+    if (nextStepMatch) result.nextStep = nextStepMatch[1].trim();
+    return result;
+  }
+
+  // Find the current project first
   const project = useMemo(() => projects.find((item) => item.id === projectId), [projects, projectId]);
+
+  // When transcript updates, fill fields
+  const [spokenText, setSpokenText] = React.useState('');
+  React.useEffect(() => {
+    if (!transcript || !project) return;
+    const trigger = /jt ?dev ?tracker/i;
+    if (!trigger.test(transcript)) return;
+
+    let speakText = `Project name: ${project.name}. `;
+    speakText += `Purpose: ${project.purpose}. `;
+    // Find latest action (by date)
+    const latestAction = project.actions && project.actions.length > 0
+      ? [...project.actions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]
+      : null;
+    if (latestAction) {
+      if (latestAction.lastAction) speakText += `Last action: ${latestAction.lastAction}. `;
+      if (latestAction.todayAction) speakText += `Today's action: ${latestAction.todayAction}. `;
+      if (latestAction.todayActionNotes) speakText += `Planned next steps: ${latestAction.todayActionNotes}. `;
+    } else {
+      speakText += 'No project history available.';
+    }
+    setSpokenText(speakText);
+    console.log('Speaking:', speakText);
+    if ('speechSynthesis' in window) {
+      try {
+        stop(); // Stop recognition before speaking
+        function speakWhenVoicesReady() {
+          const voices = window.speechSynthesis.getVoices();
+          console.log('Available voices:', voices);
+          if (!voices || voices.length === 0) {
+            // Wait for voiceschanged event
+            window.speechSynthesis.onvoiceschanged = () => {
+              window.speechSynthesis.onvoiceschanged = null;
+              speakWhenVoicesReady();
+            };
+            return;
+          }
+          const utterance = new window.SpeechSynthesisUtterance(speakText);
+          utterance.voice = voices[0];
+          utterance.onend = () => {
+            setTimeout(() => {
+              start(); // Restart recognition after a short delay
+            }, 500);
+          };
+          window.speechSynthesis.speak(utterance);
+          // Fallback: alert if not spoken after 5 seconds
+          setTimeout(() => {
+            if (window.speechSynthesis.speaking) {
+              alert('Speech synthesis did not finish. Your browser may be blocking audio output.');
+            }
+          }, 5000);
+        }
+        speakWhenVoicesReady();
+      } catch (err) {
+        alert('Speech synthesis failed: ' + err);
+        start(); // Try to restart recognition even on error
+      }
+    } else {
+      alert('Speech synthesis is not supported in this browser.');
+      start();
+    }
+    // Only run this effect when transcript changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [transcript]);
 
   if (isLoading) {
     return <p className="text-sm text-slate-600 dark:text-slate-300">Loading project...</p>;
@@ -48,6 +165,54 @@ export default function ProjectDetailsPage() {
     <div className="space-y-4">
       <LoadingOverlay visible={actionLoading} />
       <Card className="border-sky-300 bg-sky-100 dark:border-sky-700/60 dark:bg-slate-900">
+        <div style={{ display: 'flex', gap: '12px', marginBottom: '8px' }}>
+          <button
+            type="button"
+            style={{ background: '#cce', color: '#222', fontSize: '14px', padding: '8px 16px', borderRadius: '4px', border: '2px solid #99c', fontWeight: 'bold' }}
+            onClick={() => {
+              if (!project) return;
+              let speakText = `Project name: ${project.name}. `;
+              speakText += `Purpose: ${project.purpose}. `;
+              const latestAction = project.actions && project.actions.length > 0
+                ? [...project.actions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]
+                : null;
+              if (latestAction) {
+                if (latestAction.lastAction) speakText += `Last action: ${latestAction.lastAction}. `;
+                if (latestAction.todayAction) speakText += `Today's action: ${latestAction.todayAction}. `;
+                if (latestAction.todayActionNotes) speakText += `Planned next steps: ${latestAction.todayActionNotes}. `;
+              } else {
+                speakText += 'No project history available.';
+              }
+              function speakWhenVoicesReady() {
+                const voices = window.speechSynthesis.getVoices();
+                if (!voices || voices.length === 0) {
+                  window.speechSynthesis.onvoiceschanged = () => {
+                    window.speechSynthesis.onvoiceschanged = null;
+                    speakWhenVoicesReady();
+                  };
+                  return;
+                }
+                const utterance = new window.SpeechSynthesisUtterance(speakText);
+                utterance.voice = voices[0];
+                window.speechSynthesis.speak(utterance);
+              }
+              speakWhenVoicesReady();
+            }}
+          >
+            Read Project History
+          </button>
+          <button
+            type="button"
+            style={{ background: '#fcc', color: '#900', fontSize: '14px', padding: '8px 16px', borderRadius: '4px', border: '2px solid #c99', fontWeight: 'bold' }}
+            onClick={() => {
+              if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+              }
+            }}
+          >
+            Stop Speaking
+          </button>
+        </div>
         <div className="mb-2 flex items-center justify-between">
           <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">{project.name}</h1>
           <Link to="/" className="text-sm underline">Back</Link>
@@ -71,6 +236,14 @@ export default function ProjectDetailsPage() {
 
       <Card className="border-sky-300 bg-sky-100/90 dark:border-sky-700/60 dark:bg-slate-900/95">
         <h2 className="mb-3 text-lg font-semibold">Add Daily Action</h2>
+        <div className="flex flex-col gap-1 mb-2">
+          <span className="text-xs">Listening: {isListening ? 'Yes' : 'No'}</span>
+          <span className="text-xs">Transcript: {transcript || '(none)'}</span>
+          {voiceError ? <span className="text-xs text-red-600">{voiceError}</span> : null}
+          {spokenText ? (
+            <span className="text-xs text-blue-700">Speaking: {spokenText}</span>
+          ) : null}
+        </div>
         <form className="grid gap-3" onSubmit={submitAction}>
           <Input
             label="Today's Action"
