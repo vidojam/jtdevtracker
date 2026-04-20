@@ -46,27 +46,6 @@ export default function ProjectDetailsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Read out current action fields
-  function speakCurrentFields() {
-    let speakText = '';
-    if (todayAction) speakText += `Last action: ${todayAction}. `;
-    if (todayActionNotes) speakText += `Next step: ${todayActionNotes}. `;
-    if (!speakText) speakText = 'No last action or next step entered.';
-    const utterance = new window.SpeechSynthesisUtterance(speakText);
-    window.speechSynthesis.speak(utterance);
-  }
-
-  // Parse transcript for last action and next step
-  function parseVoiceInput(text: string) {
-    // Expects: "Last action [text], Next step [text]"
-    const result: { lastAction?: string; nextStep?: string } = {};
-    const lastActionMatch = text.match(/last action ([^,]+)/i);
-    if (lastActionMatch) result.lastAction = lastActionMatch[1].trim();
-    const nextStepMatch = text.match(/next step ([^,]+)/i);
-    if (nextStepMatch) result.nextStep = nextStepMatch[1].trim();
-    return result;
-  }
-
   // Find the current project first
   const project = useMemo(() => projects.find((item) => item.id === projectId), [projects, projectId]);
 

@@ -12,7 +12,7 @@ export function useVoiceRecognition(): VoiceRecognitionResult {
   const [transcript, setTranscript] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const recognitionRef = useRef<any>(null);
 
   const start = () => {
     console.log('[useVoiceRecognition] start() called');
@@ -34,7 +34,7 @@ export function useVoiceRecognition(): VoiceRecognitionResult {
       recognition.lang = 'en-US';
       recognition.interimResults = false;
       recognition.maxAlternatives = 1;
-      recognition.onresult = (event: SpeechRecognitionEvent) => {
+      recognition.onresult = (event: any) => {
         console.log('[useVoiceRecognition] onresult:', event.results[0][0].transcript);
         setTranscript(event.results[0][0].transcript);
         setIsListening(false);

@@ -90,17 +90,6 @@ export default function DashboardPage() {
     return () => stop();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isListening]);
-  // Read out current form fields
-  function speakCurrentFields() {
-    let speakText = '';
-    if (form.name) speakText += `Project name: ${form.name}. `;
-    if (form.purpose) speakText += `Purpose: ${form.purpose}. `;
-    // Optionally add more fields if needed
-    if (!speakText) speakText = 'No project name or purpose entered.';
-    const utterance = new window.SpeechSynthesisUtterance(speakText);
-    window.speechSynthesis.speak(utterance);
-  }
-
   // Parse transcript for project fields
   function parseVoiceInput(text: string) {
     // Simple parsing: expects format like "Project [name], Purpose [purpose], Last action [last], Next step [next]"
