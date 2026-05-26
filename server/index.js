@@ -132,6 +132,42 @@ const writePayload = async (projects) => {
   return payload;
 };
 
+const runDbTest = async () => {
+  const connection = await pool.getConnection();
+
+  try {
+    await connection.beginTransaction();
+
+    const [rows] = await connection.query(
+      `SELECT updated_at AS updatedAt FROM ${escapedTableName} WHERE id = 1 LIMIT 1`,
+    );
+
+    const currentUpdatedAt =
+      Array.isArray(rows) && rows[0] && typeof rows[0].updatedAt === 'number'
+        ? rows[0].updatedAt
+        : Date.now();
+
+    const nextUpdatedAt = currentUpdatedAt + 1;
+    const [updateResult] = await connection.query(
+      `UPDATE ${escapedTableName} SET updated_at = ? WHERE id = 1`,
+      [nextUpdatedAt],
+    );
+
+    await connection.rollback();
+
+    return {
+      readOk: true,
+      writeOk: updateResult?.affectedRows === 1,
+      testedAt: Date.now(),
+    };
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+};
+
 app.get('/api/health', async (_, response) => {
   try {
     await pool.query('SELECT 1');
@@ -147,6 +183,20 @@ app.get('/api/projects', async (_, response) => {
     response.json(payload);
   } catch {
     response.status(500).json({ message: 'Failed to read project data.' });
+  }
+});
+
+app.get('/api/db-test', async (_, response) => {
+  try {
+    const result = await runDbTest();
+    response.json({ ok: result.readOk && result.writeOk, ...result });
+  } catch {
+    response.status(500).json({
+      ok: false,
+      readOk: false,
+      writeOk: false,
+      message: 'Database test failed.',
+    });
   }
 });
 
