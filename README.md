@@ -12,7 +12,7 @@ Official stack: React 19 + TypeScript + Vite frontend, Tailwind CSS 4 styling, N
 - React Context API for state management
 - Tailwind CSS 4
 - localStorage persistence
-- Node.js + Express 5 local sync API with shared JSON storage (automatic multi-window sync)
+- Node.js + Express 5 sync API with MySQL storage (automatic multi-window sync)
 - Vitest 4 + React Testing Library + user-event + jsdom
 
 ## Features
@@ -65,6 +65,17 @@ npm install
 npm run dev
 ```
 
+Copy `.env.example` to `.env` and update values if needed. Defaults include:
+
+```bash
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=Blusmak1
+DB_NAME=jtdevtracker
+DB_TABLE=jtdevtracker1
+```
+
 App URL (default): `http://localhost:5173`
 
 The `dev` script now starts both:
@@ -91,11 +102,16 @@ This project is configured to run as a Render Web Service using the included `re
 3. Choose **Blueprint** (or Web Service) and use the values from `render.yaml`:
   - Build command: `npm install && npm run build`
   - Start command: `node server/index.js`
-  - Environment variable: `DATA_DIR=/var/data`
-  - Persistent disk mount: `/var/data`
+  - Environment variables: `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `DB_TABLE`
 
 ### Data persistence
 
-The API currently stores data in `server/data/projects.json`.
-In production, the API stores data in `${DATA_DIR}/projects.json` when `DATA_DIR` is set.
-Use a persistent disk in Render and mount it so this file survives restarts and redeployments.
+The API stores project data in MySQL.
+Default database: `jtdevtracker`
+Default table: `jtdevtracker1`
+
+You can initialize the database/table manually with:
+
+```bash
+mysql -u root -p < server/sql/jtdevtracker1.sql
+```
