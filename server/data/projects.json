@@ -1,5 +1,5 @@
 {
-  "updatedAt": 1776707540639,
+  "updatedAt": 1779837267181,
   "projects": [
     {
       "id": "aa70dbe4-fc46-426e-9897-6b17d4693fb8",
@@ -273,6 +273,14 @@
           "lastActionNotes": "Test phone app",
           "todayAction": "Added anoth stock to track - GCT & QUBT",
           "todayActionNotes": "test"
+        },
+        {
+          "id": "38eeb114-edbc-46a9-aed3-0cb7afc7af5e",
+          "date": "2026-04-22T22:28:23.563Z",
+          "lastAction": "Added anoth stock to track - GCT & QUBT",
+          "lastActionNotes": "test",
+          "todayAction": "Fix error on number of days from last refresh. Change font on delete button to same size as refresh button.",
+          "todayActionNotes": "Price movement alert (core)\nTemplate:\nAAPL moved +5.2% in 1 day. Now $192.34. Reply STOP to opt out.\nWhy: this matches your current threshold logic and is the main value.\n\nStrong move alert (priority tier)\nTemplate:\nHigh move: TSLA jumped +10.4% in 2 days. Now $241.10.\nWhy: separates normal alerts from “pay attention now” alerts.\n\nNew high / new low (7-day window)\nTemplate:\nNVDA hit a new 7-day high: $118.90.\nTemplate:\nAMD hit a new 7-day low: $142.30.\nWhy: very easy to understand at a glance.\n\nDaily summary (single digest instead of many pings)\nTemplate:\nDaily summary: 3 movers today. AAPL +2.1%, MSFT -1.4%, TSLA +4.7%.\nWhy: reduces notification fatigue.\n\nWatchlist inactivity reminder\nTemplate:\nNo price refresh for 24h on 4 symbols. Open MyTickerTracker to update.\nWhy: helps re-engagement without being spammy.\n\nAdded symbol confirmation\nTemplate:\nTracking started: AMZN. Threshold alert set to 5%.\nWhy: confirms user action and setting.\n\nFailed price fetch\nTemplate:\nCouldn’t update NFLX right now. We’ll retry automatically.\nWhy: turns silent failure into trust-building communication.\n\nTest alert confirmation\nTemplate:\nTest alert sent successfully for AAPL.\nWhy: avoids confusion when users tap test.\n\nMarket open nudge (optional)\nTemplate:\nMarket is open. 2 symbols are within 1% of your alert threshold.\nWhy: timely, actionable, and not noisy.\n\nQuiet-hours deferred alert\nTemplate:\nQuiet hours active. 2 alerts queued and will be sent at 8:00 AM.\nWhy: respects user sleep and prevents churn.\n\nRecommended guardrails for SMS:\n\nCap to 3-5 texts per symbol per day.\nSend only on threshold crossing, not every poll while still above threshold.\nAdd a cooldown window (for example, 2-4 hours per symbol per alert type).\nAlways include symbol, percent change, timeframe, and current price.\nAdd opt-out language where required (STOP/HELP).\nIf you want, I can draft a compact notification rules matrix next (trigger, condition, cooldown, template) so you can plug it directly into your app logic."
         }
       ],
       "snapshots": [
@@ -326,6 +334,57 @@
             "totalActions": 2,
             "lastAction": "Added anoth stock to track - GCT & QUBT",
             "lastActionNotes": "test"
+          }
+        },
+        {
+          "id": "4560e403-491c-4f90-89eb-089e971a43c4",
+          "date": "2026-04-22T22:28:23.563Z",
+          "trigger": "action-added",
+          "screen": {
+            "purpose": "Tracker my stock price and changes over a 5 day or ten day period",
+            "programDeployed": false,
+            "techStack": [],
+            "tags": [],
+            "totalActions": 3,
+            "lastAction": "Fix error on number of days from last refresh. Change font on delete button to same size as refresh button.",
+            "lastActionNotes": "Price movement alert (core)\nTemplate:\nAAPL moved +5.2% in 1 day. Now $192.34. Reply STOP to opt out.\nWhy: this matches your current threshold logic and is the main value.\n\nStrong move alert (priority tier)\nTemplate:\nHigh move: TSLA jumped +10.4% in 2 days. Now $241.10.\nWhy: separates normal alerts from “pay attention now” alerts.\n\nNew high / new low (7-day window)\nTemplate:\nNVDA hit a new 7-day high: $118.90.\nTemplate:\nAMD hit a new 7-day low: $142.30.\nWhy: very easy to understand at a glance.\n\nDaily summary (single digest instead of many pings)\nTemplate:\nDaily summary: 3 movers today. AAPL +2.1%, MSFT -1.4%, TSLA +4.7%.\nWhy: reduces notification fatigue.\n\nWatchlist inactivity reminder\nTemplate:\nNo price refresh for 24h on 4 symbols. Open MyTickerTracker to update.\nWhy: helps re-engagement without being spammy.\n\nAdded symbol confirmation\nTemplate:\nTracking started: AMZN. Threshold alert set to 5%.\nWhy: confirms user action and setting.\n\nFailed price fetch\nTemplate:\nCouldn’t update NFLX right now. We’ll retry automatically.\nWhy: turns silent failure into trust-building communication.\n\nTest alert confirmation\nTemplate:\nTest alert sent successfully for AAPL.\nWhy: avoids confusion when users tap test.\n\nMarket open nudge (optional)\nTemplate:\nMarket is open. 2 symbols are within 1% of your alert threshold.\nWhy: timely, actionable, and not noisy.\n\nQuiet-hours deferred alert\nTemplate:\nQuiet hours active. 2 alerts queued and will be sent at 8:00 AM.\nWhy: respects user sleep and prevents churn.\n\nRecommended guardrails for SMS:\n\nCap to 3-5 texts per symbol per day.\nSend only on threshold crossing, not every poll while still above threshold.\nAdd a cooldown window (for example, 2-4 hours per symbol per alert type).\nAlways include symbol, percent change, timeframe, and current price.\nAdd opt-out language where required (STOP/HELP).\nIf you want, I can draft a compact notification rules matrix next (trigger, condition, cooldown, template) so you can plug it directly into your app logic."
+          }
+        }
+      ]
+    },
+    {
+      "id": "1cfd09e7-1a6a-48d8-aa90-c6b2ea7e8e8d",
+      "name": "EvalAssist",
+      "initiationDate": "2026-05-26T00:00:00.000Z",
+      "purpose": "Studio for organizing a speakers speech evaluation",
+      "programDeployed": false,
+      "techStack": [],
+      "colorCode": "#CCFBF1",
+      "tags": [],
+      "actions": [],
+      "snapshots": [
+        {
+          "id": "9b287942-1c3c-4d86-b432-efce2843e2de",
+          "date": "2026-05-26T23:13:59.678Z",
+          "trigger": "project-created",
+          "screen": {
+            "purpose": "Studio for organizing a speakers speech evaluation",
+            "programDeployed": true,
+            "techStack": [],
+            "tags": [],
+            "totalActions": 0
+          }
+        },
+        {
+          "id": "1d4c65ae-5ac3-4836-b44b-f70ef19d47d6",
+          "date": "2026-05-26T23:14:27.161Z",
+          "trigger": "deploy-toggled",
+          "screen": {
+            "purpose": "Studio for organizing a speakers speech evaluation",
+            "programDeployed": false,
+            "techStack": [],
+            "tags": [],
+            "totalActions": 0
           }
         }
       ]

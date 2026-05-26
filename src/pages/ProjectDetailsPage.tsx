@@ -19,10 +19,12 @@ import Button from '../components/ui/Button';
 import Modal from '../components/ui/Modal';
 import LoadingOverlay from '../components/ui/LoadingOverlay';
 import { useVoiceRecognition } from '../utils/useVoiceRecognition';
+import { speakWithPreferredVoice, useSpeechVoice } from '../utils/speechVoice';
 
 export default function ProjectDetailsPage() {
   const { projectId } = useParams();
   const { projects, addAction, deleteAction, actionLoading, isLoading } = useProjects();
+  const { selectedVoiceName } = useSpeechVoice();
   const [todayAction, setTodayAction] = useState('');
   const [todayActionNotes, setTodayActionNotes] = useState('');
   const [error, setError] = useState('');
@@ -74,33 +76,17 @@ export default function ProjectDetailsPage() {
     if ('speechSynthesis' in window) {
       try {
         stop(); // Stop recognition before speaking
-        function speakWhenVoicesReady() {
-          const voices = window.speechSynthesis.getVoices();
-          console.log('Available voices:', voices);
-          if (!voices || voices.length === 0) {
-            // Wait for voiceschanged event
-            window.speechSynthesis.onvoiceschanged = () => {
-              window.speechSynthesis.onvoiceschanged = null;
-              speakWhenVoicesReady();
-            };
-            return;
-          }
-          const utterance = new window.SpeechSynthesisUtterance(speakText);
-          utterance.voice = voices[0];
-          utterance.onend = () => {
-            setTimeout(() => {
-              start(); // Restart recognition after a short delay
-            }, 500);
-          };
-          window.speechSynthesis.speak(utterance);
-          // Fallback: alert if not spoken after 5 seconds
+        speakWithPreferredVoice(speakText, selectedVoiceName, () => {
           setTimeout(() => {
-            if (window.speechSynthesis.speaking) {
-              alert('Speech synthesis did not finish. Your browser may be blocking audio output.');
-            }
-          }, 5000);
-        }
-        speakWhenVoicesReady();
+            start(); // Restart recognition after a short delay
+          }, 500);
+        });
+        // Fallback: alert if not spoken after 5 seconds
+        setTimeout(() => {
+          if (window.speechSynthesis.speaking) {
+            alert('Speech synthesis did not finish. Your browser may be blocking audio output.');
+          }
+        }, 5000);
       } catch (err) {
         alert('Speech synthesis failed: ' + err);
         start(); // Try to restart recognition even on error
@@ -162,20 +148,7 @@ export default function ProjectDetailsPage() {
               } else {
                 speakText += 'No project history available.';
               }
-              function speakWhenVoicesReady() {
-                const voices = window.speechSynthesis.getVoices();
-                if (!voices || voices.length === 0) {
-                  window.speechSynthesis.onvoiceschanged = () => {
-                    window.speechSynthesis.onvoiceschanged = null;
-                    speakWhenVoicesReady();
-                  };
-                  return;
-                }
-                const utterance = new window.SpeechSynthesisUtterance(speakText);
-                utterance.voice = voices[0];
-                window.speechSynthesis.speak(utterance);
-              }
-              speakWhenVoicesReady();
+              speakWithPreferredVoice(speakText, selectedVoiceName);
             }}
           >
             Read Project History

@@ -9,6 +9,7 @@ import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
 import Modal from '../components/ui/Modal';
 import { useVoiceRecognition } from '../utils/useVoiceRecognition';
+import { speakWithPreferredVoice, useSpeechVoice } from '../utils/speechVoice';
 import LoadingOverlay from '../components/ui/LoadingOverlay';
 
 interface ProjectFormState {
@@ -80,6 +81,7 @@ export default function DashboardPage() {
 
   // Voice recognition hook
   const { transcript, isListening, error: voiceError, start, stop } = useVoiceRecognition();
+  const { voices, selectedVoiceName, setSelectedVoiceName } = useSpeechVoice();
 
   // Start listening automatically on mount and after each result
   useEffect(() => {
@@ -119,11 +121,10 @@ export default function DashboardPage() {
       if (!speakText) speakText = `You said: ${transcript}`;
       setSpokenText(speakText);
       if (speakText) {
-        const utterance = new window.SpeechSynthesisUtterance(speakText);
-        window.speechSynthesis.speak(utterance);
+        speakWithPreferredVoice(speakText, selectedVoiceName);
       }
     }
-  }, [transcript]);
+  }, [transcript, selectedVoiceName]);
 
   const filtered = useMemo(() => {
     return sortProjects(filterProjects(projects, searchTerm), sortOrder);
@@ -284,6 +285,21 @@ export default function DashboardPage() {
               <span className="text-xs text-blue-700">Speaking: {spokenText}</span>
             ) : null}
           </div>
+          <label className="md:col-span-2 flex flex-col gap-1 text-sm font-medium text-slate-700 dark:text-slate-200">
+            Speech Voice
+            <select
+              value={selectedVoiceName}
+              onChange={(event) => setSelectedVoiceName(event.target.value)}
+              className="rounded-md border border-slate-400 bg-white px-3 py-2 text-slate-900 focus:border-slate-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+            >
+              <option value="">Default Voice</option>
+              {voices.map((voice) => (
+                <option key={`${voice.name}-${voice.lang}`} value={voice.name}>
+                  {voice.name} ({voice.lang})
+                </option>
+              ))}
+            </select>
+          </label>
           <Input
             label="Project Name"
             value={form.name}
