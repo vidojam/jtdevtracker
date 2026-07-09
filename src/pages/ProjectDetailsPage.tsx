@@ -107,7 +107,7 @@ export default function ProjectDetailsPage() {
     return (
       <Card>
         <p className="mb-3 text-sm">Project not found.</p>
-        <Link to="/" className="text-sm underline">Back to dashboard</Link>
+        <Link to="/" className="text-sm underline">Back To Project Dashboard</Link>
       </Card>
     );
   }
@@ -167,7 +167,7 @@ export default function ProjectDetailsPage() {
         </div>
         <div className="mb-2 flex items-center justify-between">
           <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">{project.name}</h1>
-          <Link to="/" className="text-sm underline">Back</Link>
+          <Link to="/" className="text-sm underline">Back To Project Dashboard</Link>
         </div>
         <p className="text-sm text-slate-600 dark:text-slate-300">Purpose: {project.purpose}</p>
         <p className="text-sm text-slate-600 dark:text-slate-300">Program Deploy: {project.programDeployed ? 'Yes' : 'No'}</p>

@@ -1,7 +1,9 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import mysql from 'mysql2/promise';
 import path from 'node:path';
+import { readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 
 const app = express();
@@ -9,15 +11,17 @@ const port = Number(process.env.PORT) || 4000;
 const dbHost = process.env.DB_HOST?.trim() || '127.0.0.1';
 const dbPort = Number(process.env.DB_PORT) || 3306;
 const dbUser = process.env.DB_USER?.trim() || 'root';
-const dbPassword = process.env.DB_PASSWORD ?? 'Blusmak1';
+const dbPassword = process.env.DB_PASSWORD ?? '';
 const dbName = process.env.DB_NAME?.trim() || 'jtdevtracker';
 const dbTable = process.env.DB_TABLE?.trim() || 'jtdevtracker1';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const clientDistPath = path.join(__dirname, '..', 'dist');
+const fileStorePath = path.join(__dirname, 'data', 'projects.json');
 const isProduction = process.env.NODE_ENV === 'production';
 let pool;
+let storage = 'mysql';
 
 const parseJsonPayload = (payload) => {
   if (Array.isArray(payload)) return payload;
@@ -95,7 +99,39 @@ const ensureStorage = async () => {
   );
 };
 
+const readFileStore = async () => {
+  try {
+    const raw = await readFile(fileStorePath, 'utf-8');
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object') {
+      const updatedAt = typeof parsed.updatedAt === 'number' ? parsed.updatedAt : Date.now();
+      return {
+        updatedAt,
+        projects: parseJsonPayload(parsed.projects),
+      };
+    }
+  } catch {
+    // Fallback to an empty payload and create the file on first write.
+  }
+
+  return { updatedAt: Date.now(), projects: [] };
+};
+
+const writeFileStore = async (projects) => {
+  const payload = {
+    updatedAt: Date.now(),
+    projects,
+  };
+
+  await writeFile(fileStorePath, `${JSON.stringify(payload, null, 2)}\n`, 'utf-8');
+  return payload;
+};
+
 const readPayload = async () => {
+  if (storage === 'file') {
+    return readFileStore();
+  }
+
   const [rows] = await pool.query(`
     SELECT updated_at AS updatedAt, projects_json AS projects
     FROM ${escapedTableName}
@@ -115,6 +151,10 @@ const readPayload = async () => {
 };
 
 const writePayload = async (projects) => {
+  if (storage === 'file') {
+    return writeFileStore(projects);
+  }
+
   const payload = {
     updatedAt: Date.now(),
     projects,
@@ -133,6 +173,15 @@ const writePayload = async (projects) => {
 };
 
 const runDbTest = async () => {
+  if (storage === 'file') {
+    return {
+      readOk: true,
+      writeOk: true,
+      testedAt: Date.now(),
+      mode: 'file',
+    };
+  }
+
   const connection = await pool.getConnection();
 
   try {
@@ -170,10 +219,12 @@ const runDbTest = async () => {
 
 app.get('/api/health', async (_, response) => {
   try {
-    await pool.query('SELECT 1');
-    response.json({ ok: true, storage: 'mysql' });
+    if (storage === 'mysql') {
+      await pool.query('SELECT 1');
+    }
+    response.json({ ok: true, storage });
   } catch {
-    response.status(500).json({ ok: false, storage: 'mysql' });
+    response.status(500).json({ ok: false, storage });
   }
 });
 
@@ -226,15 +277,27 @@ if (isProduction) {
 }
 
 const startServer = async () => {
-  await ensureStorage();
+  try {
+    await ensureStorage();
+    storage = 'mysql';
+  } catch (error) {
+    storage = 'file';
+    console.warn('MySQL unavailable; falling back to file storage at server/data/projects.json');
+    console.warn(error instanceof Error ? error.message : error);
+  }
+
   app.listen(port, '0.0.0.0', () => {
     console.log(`JT Dev Tracker running at http://localhost:${port}`);
-    console.log(`MySQL: ${dbUser}@${dbHost}:${dbPort}/${safeDbName} table ${safeTableName}`);
+    if (storage === 'mysql') {
+      console.log(`MySQL: ${dbUser}@${dbHost}:${dbPort}/${safeDbName} table ${safeTableName}`);
+    } else {
+      console.log('Storage mode: file (server/data/projects.json)');
+    }
   });
 };
 
 startServer().catch((error) => {
-  console.error('Failed to start JT Dev Tracker API with MySQL storage.');
+  console.error('Failed to start JT Dev Tracker API.');
   console.error(error);
   process.exit(1);
 });

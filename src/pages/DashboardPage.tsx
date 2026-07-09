@@ -83,15 +83,11 @@ export default function DashboardPage() {
   const { transcript, isListening, error: voiceError, start, stop } = useVoiceRecognition();
   const { voices, selectedVoiceName, setSelectedVoiceName } = useSpeechVoice();
 
-  // Start listening automatically on mount and after each result
+  // Stop recognition on unmount.
   useEffect(() => {
-    if (!isListening) {
-      start();
-    }
-    // Optionally, stop listening on unmount
     return () => stop();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isListening]);
+  }, []);
   // Parse transcript for project fields
   function parseVoiceInput(text: string) {
     // Simple parsing: expects format like "Project [name], Purpose [purpose], Last action [last], Next step [next]"
@@ -276,14 +272,34 @@ export default function DashboardPage() {
           </span>
         </div>
         <form className="grid gap-3 md:grid-cols-2" onSubmit={submit}>
-          <div className="md:col-span-2 flex items-center gap-2 mb-2">
-            {voiceError ? <span className="text-xs text-red-600">{voiceError}</span> : null}
-            {transcript && !isListening ? (
-              <span className="text-xs text-green-700">Recognized: {transcript}</span>
-            ) : null}
-            {spokenText && !isListening ? (
-              <span className="text-xs text-blue-700">Speaking: {spokenText}</span>
-            ) : null}
+          <div className="md:col-span-2 mb-2 flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={start}
+                disabled={isListening}
+              >
+                {isListening ? 'Listening...' : 'Start Voice Input'}
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={stop}
+                disabled={!isListening}
+              >
+                Stop
+              </Button>
+            </div>
+            <div className="min-h-5 text-xs">
+              {voiceError ? <span className="text-red-600">{voiceError}</span> : null}
+              {!voiceError && transcript && !isListening ? (
+                <span className="text-green-700">Recognized: {transcript}</span>
+              ) : null}
+            </div>
+            <div className="min-h-5 text-xs text-blue-700">
+              {spokenText && !isListening ? <span>Speaking: {spokenText}</span> : null}
+            </div>
           </div>
           <label className="md:col-span-2 flex flex-col gap-1 text-sm font-medium text-slate-700 dark:text-slate-200">
             Speech Voice
@@ -355,7 +371,7 @@ export default function DashboardPage() {
               onChange={(event) => setForm((current) => ({ ...current, programDeployed: event.target.checked }))}
               className="h-4 w-4 rounded border-slate-400 text-slate-800 focus:ring-slate-500 dark:border-slate-700"
             />
-            Program Deploy: Yes/No
+            Program Deployed: Yes/No
           </label>
           <Input
             label="Tags (comma-separated)"

@@ -25,7 +25,7 @@ export default function ProjectSnapshotsPage() {
     return (
       <Card>
         <p className="mb-3 text-sm">Project not found.</p>
-        <Link to="/" className="text-sm underline">Back to dashboard</Link>
+        <Link to="/" className="text-sm underline">Back To Project Dashboard</Link>
       </Card>
     );
   }

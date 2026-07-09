@@ -71,10 +71,13 @@ Copy `.env.example` to `.env` and update values if needed. Defaults include:
 DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_USER=root
-DB_PASSWORD=Blusmak1
+DB_PASSWORD=your_mysql_password
 DB_NAME=jtdevtracker
 DB_TABLE=jtdevtracker1
+PORT=4000
 ```
+
+The API loads `.env` automatically on startup.
 
 App URL (default): `http://localhost:5173`
 
@@ -103,6 +106,8 @@ This project is configured to run as a Render Web Service using the included `re
   - Build command: `npm install && npm run build`
   - Start command: `node server/index.js`
   - Environment variables: `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `DB_TABLE`
+
+Do not use `127.0.0.1` for `DB_HOST` on Render unless MySQL is running inside the same container. Point these values at your real MySQL service and set the sensitive ones in Render's environment settings.
 
 ### Data persistence
 
